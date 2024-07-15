@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up / Login</title>
+
+    <!-- Font Awesome CDN link -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css">
+
+    <!-- Custom CSS file link -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <header class="header">
+
+        <section class="flex">
+
+            <a href="home.html" class="logo">linkbery.</a>
+
+            <form action="search.html" method="post" class="search-form">
+                <input type="text" name="search" required placeholder="Search courses..." maxlength="100">
+                <button type="submit" class="fas fa-search"></button>
+            </form>
+
+            <div class="icons">
+                <div id="menu-btn" class="fas fa-bars"></div>
+                <div id="search-btn" class="fas fa-search"></div>
+                <div id="user-btn" class="fas fa-user"></div>
+                <div id="toggle-btn" class="fas fa-sun"></div>
+            </div>
+
+            <div class="profile">
+                <img src="images/pic-1.jpg" class="image" alt="">
+                <h3 class="name">shaikh anas</h3>
+                <p class="role">student</p>
+                <a href="profile.html" class="btn">view profile</a>
+                <div class="flex-btn">
+                    <a href="#signup" class="option-btn">Sign Up</a>
+                    <a href="#login" class="option-btn">Login</a>
+                </div>
+            </div>
+
+        </section>
+
+    </header>
+
+    <div class="side-bar">
+
+        <div id="close-btn">
+            <i class="fas fa-times"></i>
+        </div>
+
+        <div class="profile">
+            <img src="images/pic-1.jpg" class="image" alt="">
+            <h3 class="name">shaikh anas</h3>
+            <p class="role">student</p>
+            <a href="profile.html" class="btn">view profile</a>
+        </div>
+
+        <nav class="navbar">
+            <a href="home.html"><i class="fas fa-home"></i><span>home</span></a>
+            <a href="about.html"><i class="fas fa-question"></i><span>about</span></a>
+            <a href="courses.html"><i class="fas fa-graduation-cap"></i><span>courses</span></a>
+            <a href="teachers.html"><i class="fas fa-chalkboard-user"></i><span>teachers</span></a>
+            <a href="contact.html"><i class="fas fa-headset"></i><span>contact us</span></a>
+        </nav>
+
+    </div>
+
+    <section class="form-container" id="signup">
+
+        <form id="signupForm" method="post" enctype="multipart/form-data">
+            <h3>Login Now</h3>
+            <p>Your email <span>*</span></p>
+            <input type="email" name="email" placeholder="Enter your email" required maxlength="50" class="box">
+            <p>Your password <span>*</span></p>
+            <input type="password" name="pass" placeholder="Enter your password" required maxlength="20" class="box">
+            <a href="home.html"><input type="submit" value="Sign Up" name="submit" class="btn">
+            </a>
+        </form>
+
+    </section>
+
+    <section class="form-container" id="login" style="display: none;">
+
+        <form id="loginForm" method="post" enctype="multipart/form-data">
+            <h3>Login Now</h3>
+            <p>Your email <span>*</span></p>
+            <input type="email" name="loginEmail" placeholder="Enter your email" required maxlength="50" class="box">
+            <p>Your password <span>*</span></p>
+            <input type="password" name="loginPass" placeholder="Enter your password" required maxlength="20" class="box">
+            <input type="submit" value="Login" name="submit" class="btn">
+        </form>
+
+    </section>
+
+   
+    <!-- Firebase Script -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        const firebaseConfig = {
+            apiKey: "AIzaSyAe-NQeL6Pf47flxkvkkpkC5vRlhqwsyTY",
+            authDomain: "linkbery-f814e.firebaseapp.com",
+            databaseURL: "https://linkbery-f814e-default-rtdb.firebaseio.com",
+            projectId: "linkbery-f814e",
+            storageBucket: "linkbery-f814e.appspot.com",
+            messagingSenderId: "933346239330",
+            appId: "1:933346239330:web:fd97a81e3200fefa01c23b",
+            measurementId: "G-2EL00C0GYC"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const auth = getAuth();
+
+        // Sign Up Form
+        const signupForm = document.getElementById('signupForm');
+        signupForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = signupForm['email'].value;
+            const password = signupForm['pass'].value;
+
+            createUserWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    // User signed up successfully
+                    const user = userCredential.user;
+                    console.log('User signed up:', user);
+                })
+                .catch((error) => {
+                    console.error('Error signing up:', error.message);
+                });
+        });
+
+        // Login Form
+        const loginForm = document.getElementById('loginForm');
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = loginForm['loginEmail'].value;
+            const password = loginForm['loginPass'].value;
+
+            signInWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    // User logged in successfully
+                    const user = userCredential.user;
+                    console.log('User logged in:', user);
+                })
+                .catch((error) => {
+                    console.error('Error logging in:', error.message);
+                });
+        });
+    </script>
+
+    <!-- custom js file link -->
+    <script src="js/script.js"></script>
+
+</body>
+
+</html>
