@@ -1,4 +1,4 @@
-// Single place for icons. Everything is lucide-react, 16px, stroke 1.75
+// Single place for icons. Everything is lucide-react, 18px, stroke 2
 // (the defaults come from <LucideProvider> in main.jsx).
 // Pages import icons from here instead of from lucide-react directly.
 import { createElement, isValidElement } from 'react'
@@ -166,8 +166,8 @@ export {
   X,
 }
 
-export const ICON_SIZE = 16
-export const ICON_STROKE = 1.75
+export const ICON_SIZE = 18
+export const ICON_STROKE = 2
 
 /** Category slug (CONTRACT "Categories") -> Lucide icon. getCategories().icon is ignored. */
 export const CATEGORY_ICONS = {

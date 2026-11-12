@@ -3,8 +3,11 @@ import { useAuth } from '../hooks/useAuth.js'
 import { useSaved } from '../hooks/useSaved.js'
 import { Bookmark, BookmarkCheck } from './icons.js'
 
-/** Bookmark toggle. Guests are sent to /login with a message and brought back afterwards. */
-export default function SaveButton({ courseId, courseTitle, variant = 'icon' }) {
+/**
+ * Save (bookmark) toggle. Guests are sent to /login with a message and come back afterwards.
+ * variant: "icon" (default; round white button for use over a thumbnail) or "full" (text button).
+ */
+export default function SaveButton({ courseId, courseTitle, variant = 'icon', className = '' }) {
   const { user } = useAuth()
   const { isSaved, toggleSaved } = useSaved()
   const navigate = useNavigate()
@@ -15,6 +18,7 @@ export default function SaveButton({ courseId, courseTitle, variant = 'icon' }) 
     navigate('/login', { state: { from: location, message: message || 'Log in to save courses to your profile.' } })
 
   const onClick = (e) => {
+    e.preventDefault()
     e.stopPropagation()
     if (!user) {
       goLogin()
@@ -27,7 +31,7 @@ export default function SaveButton({ courseId, courseTitle, variant = 'icon' }) 
     }
   }
 
-  const label = saved ? 'Remove from saved' : 'Save'
+  const label = saved ? 'Remove from saved' : 'Save course'
   const fullLabel = courseTitle ? `${label}: ${courseTitle}` : label
   const Icon = saved ? BookmarkCheck : Bookmark
 
@@ -35,22 +39,23 @@ export default function SaveButton({ courseId, courseTitle, variant = 'icon' }) 
     return (
       <button
         type="button"
-        className={`btn btn-ghost btn-icon btn-sm action-btn save-btn ${saved ? 'is-active' : ''}`}
+        className={`save-btn ${saved ? 'is-active' : ''} ${className}`.trim()}
         onClick={onClick}
         aria-pressed={saved}
         aria-label={fullLabel}
-        data-tip={saved ? 'Saved' : 'Save'}
+        title={saved ? 'Saved' : 'Save'}
       >
-        <Icon />
+        <Icon size={18} fill={saved ? 'currentColor' : 'none'} />
       </button>
     )
   }
   return (
     <button
       type="button"
-      className={`btn save-btn-full ${saved ? 'is-active' : ''}`}
+      className={`btn btn-secondary save-btn-full ${saved ? 'is-active' : ''} ${className}`.trim()}
       onClick={onClick}
       aria-pressed={saved}
+      aria-label={courseTitle ? fullLabel : undefined}
     >
       <Icon />
       {saved ? 'Saved' : 'Save'}

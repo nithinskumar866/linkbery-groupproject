@@ -1,7 +1,7 @@
 // Small UI helpers shared by components and pages (no data access here
 // except through src/lib/courses.js).
 import { useEffect } from 'react'
-import { getPlatforms, getCategory } from '../lib/courses.js'
+import { getCategories, getPlatforms, getCategory } from '../lib/courses.js'
 
 /** Sets document.title to "<title> | Linkbery". */
 export function usePageTitle(title) {
@@ -89,4 +89,35 @@ export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 export function courseByline(course) {
   const by = [course?.provider, course?.platform].filter(Boolean)
   return by.length === 2 && by[0] === by[1] ? by[0] : by.join(' · ')
+}
+
+const TILE_COUNT = 6
+let tileIndex = null
+
+/** Stable tile number (1-6) for a course, from its first category. */
+export function tileFor(course) {
+  if (!tileIndex) {
+    tileIndex = new Map(getCategories().map((c, i) => [c.slug, (i % TILE_COUNT) + 1]))
+  }
+  const slug = course?.categories?.[0]
+  if (slug && tileIndex.has(slug)) return tileIndex.get(slug)
+  // Unknown category: hash the id so the colour still never changes.
+  let h = 0
+  for (const ch of String(slug || course?.id || '')) h = (h * 31 + ch.charCodeAt(0)) >>> 0
+  return (h % TILE_COUNT) + 1
+}
+
+/** Page numbers to show: first, last, current ±1, with "…" gaps. */
+export function pageItems(page, pageCount) {
+  if (pageCount <= 7) return Array.from({ length: pageCount }, (_, i) => i + 1)
+  const set = new Set([1, pageCount, page - 1, page, page + 1])
+  if (page <= 3) [2, 3, 4].forEach((p) => set.add(p))
+  if (page >= pageCount - 2) [pageCount - 3, pageCount - 2, pageCount - 1].forEach((p) => set.add(p))
+  const pages = [...set].filter((p) => p >= 1 && p <= pageCount).sort((a, b) => a - b)
+  const out = []
+  pages.forEach((p, i) => {
+    if (i > 0 && p - pages[i - 1] > 1) out.push(`gap-${p}`)
+    out.push(p)
+  })
+  return out
 }

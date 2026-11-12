@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { findPlatform, initials } from './utils.js'
 
-/** Platform logo image, falling back to mono initials (also if the image fails to load). */
+/** Platform logo image, falling back to initials (also if the image fails to load). */
 export default function PlatformLogo({ name, size = 20, decorative = false }) {
   const platform = findPlatform(name)
   const [failed, setFailed] = useState(false)

@@ -23,6 +23,7 @@ import {
   UserPen,
   UserPlus,
   WandSparkles,
+  X,
 } from './icons.js'
 import { closePalette, openPalette, togglePalette, usePalette } from './palette.js'
 import { formatRating } from './utils.js'
@@ -254,8 +255,8 @@ function PaletteDialog({ initialQuery }) {
             autoComplete="off"
             spellCheck="false"
           />
-          <button type="button" className="kbd palette-esc" onClick={closePalette} tabIndex={-1}>
-            esc
+          <button type="button" className="palette-close" onClick={closePalette} tabIndex={-1} aria-label="Close search">
+            <X size={18} />
           </button>
         </div>
 
@@ -263,7 +264,7 @@ function PaletteDialog({ initialQuery }) {
           {groups.map((g) => (
             <div key={g.id} role="group" aria-labelledby={g.label ? `${uid}-g-${g.id}` : undefined} aria-label={g.label ? undefined : 'More'} className="palette-group">
               {g.label && (
-                <div className="palette-group-label section-label" id={`${uid}-g-${g.id}`} role="presentation">
+                <div className="palette-group-label" id={`${uid}-g-${g.id}`} role="presentation">
                   {g.label}
                 </div>
               )}

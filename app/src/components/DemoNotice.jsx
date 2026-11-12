@@ -1,11 +1,14 @@
-/** Explains that accounts are browser-only (no backend). Shown on auth/profile pages. */
-export default function DemoNotice() {
+import { Info } from './icons.js'
+
+/** Amber-tint note: accounts are browser-only (no backend). Shown on auth and profile pages. */
+export default function DemoNotice({ className = '' }) {
   return (
-    <p className="demo-notice" role="note">
-      <span className="badge badge-amber">Demo login</span>
-      <span>
-        Data stays in this browser. There is no server, so don’t reuse a real password.
-      </span>
-    </p>
+    <div className={`demo-notice ${className}`.trim()} role="note">
+      <Info aria-hidden="true" />
+      <p>
+        <strong>Demo login.</strong> Your account and saved courses stay in this browser. There is no server, so
+        don’t reuse a real password.
+      </p>
+    </div>
   )
 }

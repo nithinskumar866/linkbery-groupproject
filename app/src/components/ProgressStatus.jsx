@@ -47,11 +47,11 @@ function useStatus(courseId) {
 }
 
 /**
- * Status selector.
- * - "full": segmented control (course detail page)
- * - "compact": a small select (path steps)
- * - "icon": an icon button with a small menu (course rows)
- * Guests are sent to /login with a message.
+ * Status selector. Guests are sent to /login with a message.
+ * - "full" (default): labelled "Your progress" select (course page side card)
+ * - "compact": a small select without a visible label (path steps, list results)
+ * - "segmented": a row of four toggle buttons
+ * - "icon": an icon button with a small menu
  */
 export function StatusControl({ courseId, courseTitle, variant = 'full' }) {
   const uid = useId()
@@ -60,59 +60,80 @@ export function StatusControl({ courseId, courseTitle, variant = 'full' }) {
 
   if (variant === 'icon') return <StatusMenu courseId={courseId} courseTitle={courseTitle} />
 
-  if (variant === 'compact') {
+  if (variant === 'segmented') {
+    return (
+      <fieldset className="status-control">
+        <legend className="field-label">Your progress</legend>
+        <div className="segmented" role="group" aria-label={`Progress${courseTitle ? ` for ${courseTitle}` : ''}`}>
+          {options.map((s) => {
+            const meta = metaFor(s)
+            const active = (current || null) === s
+            return (
+              <button
+                key={s || 'none'}
+                type="button"
+                className={`segmented-item status-${s || 'none'} ${active ? 'is-active' : ''}`}
+                aria-pressed={active}
+                onClick={() => choose(s)}
+              >
+                {meta.label}
+              </button>
+            )
+          })}
+        </div>
+        {!user && <p className="field-hint">Log in to track courses you are planning, taking or have finished.</p>}
+      </fieldset>
+    )
+  }
+
+  const full = variant !== 'compact'
+  const select = (
+    <select
+      id={`${uid}-st`}
+      className={`select ${full ? '' : 'select-sm'} status-select-input status-${current || 'none'}`}
+      value={current || ''}
+      onChange={(e) => choose(e.target.value || null)}
+      onMouseDown={(e) => {
+        // Guests: go to login instead of opening the list.
+        if (!user) {
+          e.preventDefault()
+          goLogin()
+        }
+      }}
+      onKeyDown={(e) => {
+        if (!user && (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+          e.preventDefault()
+          goLogin()
+        }
+      }}
+    >
+      {options.map((s) => (
+        <option key={s || 'none'} value={s || ''}>
+          {statusLabel(s)}
+        </option>
+      ))}
+    </select>
+  )
+
+  if (!full) {
     return (
       <div className="status-select">
         <label htmlFor={`${uid}-st`} className="visually-hidden">
           Progress{courseTitle ? ` for ${courseTitle}` : ''}
         </label>
-        <select
-          id={`${uid}-st`}
-          className={`select select-sm status-${current || 'none'}`}
-          value={current || ''}
-          onChange={(e) => choose(e.target.value || null)}
-          onMouseDown={(e) => {
-            // Guests: go to login instead of opening the list.
-            if (!user) {
-              e.preventDefault()
-              goLogin()
-            }
-          }}
-        >
-          {options.map((s) => (
-            <option key={s || 'none'} value={s || ''}>
-              {statusLabel(s)}
-            </option>
-          ))}
-        </select>
+        {select}
       </div>
     )
   }
 
   return (
-    <fieldset className="status-control">
-      <legend className="section-label">Your progress</legend>
-      <div className="segmented" role="group" aria-label={`Progress${courseTitle ? ` for ${courseTitle}` : ''}`}>
-        {options.map((s) => {
-          const meta = metaFor(s)
-          const Icon = meta.icon
-          const active = (current || null) === s
-          return (
-            <button
-              key={s || 'none'}
-              type="button"
-              className={`segmented-item status-${s || 'none'} ${active ? 'is-active' : ''}`}
-              aria-pressed={active}
-              onClick={() => choose(s)}
-            >
-              <Icon aria-hidden="true" />
-              <span>{meta.label}</span>
-            </button>
-          )
-        })}
-      </div>
+    <div className="field status-control">
+      <label htmlFor={`${uid}-st`} className="field-label">
+        Your progress
+      </label>
+      {select}
       {!user && <p className="field-hint">Log in to track courses you are planning, taking or have finished.</p>}
-    </fieldset>
+    </div>
   )
 }
 

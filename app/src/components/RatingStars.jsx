@@ -1,32 +1,30 @@
 import { formatCount, formatRating } from './utils.js'
 
 /**
- * Number-based rating: a small amber ★, the value in mono and the review count.
- * Shows a dash when there is no rating ("No ratings yet" with showEmpty).
- * The name is kept for compatibility; no star rows are drawn.
+ * Rating line: "★ 4.8 (140K)" with the star in --star, or "No rating yet".
+ * `long` adds the word "reviews". `size` ("sm" | "md" | "lg") only changes the font size.
+ * `showEmpty` is accepted for compatibility (the empty text is always shown).
  */
-export default function RatingStars({ rating, reviewCount, size = 'md', showEmpty = false }) {
+export default function RatingStars({ rating, reviewCount, size = 'md', long = false, className = '' }) {
   const value = formatRating(rating)
+  const cls = `rating rating-${size} ${className}`.trim()
   if (value == null) {
-    return (
-      <span className={`rating rating-${size} rating-empty`} aria-label="No ratings yet">
-        {showEmpty ? 'No ratings yet' : '—'}
-      </span>
-    )
+    return <span className={`${cls} rating-empty`}>No rating yet</span>
   }
   const reviews = reviewCount != null && reviewCount > 0 ? formatCount(reviewCount) : null
   const label = `Rated ${value} out of 5${reviews ? `, ${reviews} reviews` : ''}`
   return (
-    <span className={`rating rating-${size}`} role="img" aria-label={label}>
+    <span className={cls} role="img" aria-label={label}>
       <span className="rating-star" aria-hidden="true">
         ★
       </span>
-      <span className="rating-value" aria-hidden="true">
+      <strong className="rating-value" aria-hidden="true">
         {value}
-      </span>
+      </strong>
       {reviews && (
         <span className="rating-count" aria-hidden="true">
-          {reviews}
+          ({reviews}
+          {long ? ' reviews' : ''})
         </span>
       )}
     </span>
