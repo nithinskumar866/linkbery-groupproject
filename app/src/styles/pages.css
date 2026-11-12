@@ -4,6 +4,14 @@
  * components.css); this file only lays pages out. Tokens: styles/tokens.css.
  */
 
+/* Page-specific buttons (pg-tab, pg-tab-more, …) start from a clean slate.
+   :where() keeps this at zero specificity, so each pg- rule below still wins. */
+:where(button[class^='pg-'], button[class*=' pg-']) {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
 /* ---------- Layout helpers ---------- */
 .pg-wrap {
   width: 100%;
@@ -660,6 +668,7 @@
 
 .pg-detail-title {
   margin: 6px 0 var(--space-3);
+  color: var(--on-navy); /* base h1 colour is navy ink, which vanished on the navy hero */
   font-size: clamp(1.875rem, 1.3rem + 2.4vw, var(--text-4xl));
   font-weight: 800;
   letter-spacing: var(--tracking-tight);
