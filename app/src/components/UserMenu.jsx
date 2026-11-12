@@ -2,22 +2,43 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth.js'
 import Avatar from './Avatar.jsx'
+import { Bookmark, LogOut, UserPen } from './icons.js'
 
+/** Avatar button with a small account menu, or "Log in" for guests. */
 export default function UserMenu() {
   const { user, logOut } = useAuth()
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
+  const buttonRef = useRef(null)
   const navigate = useNavigate()
 
   useEffect(() => {
     if (!open) return undefined
+    const items = () => [...(ref.current?.querySelectorAll('[role="menuitem"]') || [])]
+    items()[0]?.focus()
     const onDown = (e) => {
       if (ref.current && !ref.current.contains(e.target)) setOpen(false)
     }
     const onKey = (e) => {
+      const list = items()
+      const i = list.indexOf(document.activeElement)
       if (e.key === 'Escape') {
         setOpen(false)
-        ref.current?.querySelector('button')?.focus()
+        buttonRef.current?.focus()
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        list[(i + 1) % list.length]?.focus()
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        list[(i - 1 + list.length) % list.length]?.focus()
+      } else if (e.key === 'Home') {
+        e.preventDefault()
+        list[0]?.focus()
+      } else if (e.key === 'End') {
+        e.preventDefault()
+        list[list.length - 1]?.focus()
+      } else if (e.key === 'Tab') {
+        setOpen(false)
       }
     }
     document.addEventListener('mousedown', onDown)
@@ -30,18 +51,9 @@ export default function UserMenu() {
 
   if (!user) {
     return (
-      <div className="user-menu user-menu-guest">
-        <span className="user-guest-label">
-          <Avatar user={null} size={32} />
-          <span className="user-name-text">Guest</span>
-        </span>
-        <Link className="btn btn-ghost btn-sm" to="/login">
-          Login
-        </Link>
-        <Link className="btn btn-primary btn-sm hide-xs" to="/register">
-          Register
-        </Link>
-      </div>
+      <Link className="btn btn-sm user-login" to="/login">
+        Log in
+      </Link>
     )
   }
 
@@ -55,39 +67,32 @@ export default function UserMenu() {
   return (
     <div className="user-menu" ref={ref}>
       <button
+        ref={buttonRef}
         type="button"
         className="user-menu-button"
-        aria-haspopup="true"
+        aria-haspopup="menu"
         aria-expanded={open}
+        aria-label={`Account: ${user.name}`}
         onClick={() => setOpen((o) => !o)}
       >
-        <Avatar user={user} size={34} />
-        <span className="user-name-text">{user.name}</span>
-        <i className="fa-solid fa-chevron-down user-menu-caret" aria-hidden="true" />
+        <Avatar user={user} size={24} />
       </button>
       {open && (
-        <div className="user-dropdown">
-          <div className="user-dropdown-head">
-            <strong>{user.name}</strong>
-            <span className="muted">{user.email}</span>
+        <div className="menu user-menu-pop" role="menu" aria-label="Account">
+          <div className="menu-head">
+            <span className="menu-head-name">{user.name}</span>
+            <span className="menu-head-sub">{user.email}</span>
           </div>
-          <ul>
-            <li>
-              <Link to="/profile" onClick={close}>
-                <i className="fa-solid fa-bookmark" aria-hidden="true" /> Profile &amp; saved
-              </Link>
-            </li>
-            <li>
-              <Link to="/profile/edit" onClick={close}>
-                <i className="fa-solid fa-user-pen" aria-hidden="true" /> Edit profile
-              </Link>
-            </li>
-            <li>
-              <button type="button" onClick={onLogout}>
-                <i className="fa-solid fa-right-from-bracket" aria-hidden="true" /> Log out
-              </button>
-            </li>
-          </ul>
+          <Link role="menuitem" className="menu-item" to="/profile" onClick={close}>
+            <Bookmark /> Profile and saved
+          </Link>
+          <Link role="menuitem" className="menu-item" to="/profile/edit" onClick={close}>
+            <UserPen /> Edit profile
+          </Link>
+          <div className="menu-sep" role="separator" />
+          <button role="menuitem" type="button" className="menu-item" onClick={onLogout}>
+            <LogOut /> Log out
+          </button>
         </div>
       )}
     </div>

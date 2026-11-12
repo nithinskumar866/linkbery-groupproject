@@ -84,3 +84,9 @@ export function returnPath(state, fallback = '/profile') {
 }
 
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
+
+/** "Google · Coursera", or just "Udemy" when provider and platform are the same. */
+export function courseByline(course) {
+  const by = [course?.provider, course?.platform].filter(Boolean)
+  return by.length === 2 && by[0] === by[1] ? by[0] : by.join(' · ')
+}

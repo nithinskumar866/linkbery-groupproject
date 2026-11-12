@@ -1,172 +1,136 @@
+import { useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { getAllSkills, getCategories, getOverallStats, getPlatforms, searchCourses } from '../lib/courses.js'
+import { Search } from 'lucide-react'
+import { getCategories, getFacetCounts, getOverallStats, searchCourses } from '../lib/courses.js'
 import { getAllPaths } from '../lib/paths.js'
-import CourseGrid from '../components/CourseGrid.jsx'
-import PathCard from '../components/PathCard.jsx'
-import EmptyState from '../components/EmptyState.jsx'
-import PlatformLogo from '../components/PlatformLogo.jsx'
-import SkillChip from '../components/SkillChip.jsx'
+import CourseList from '../components/CourseList.jsx'
+import { CategoryIcon } from '../components/icons.js'
+import { openPalette } from '../components/palette.js'
 import { formatNumber, formatRating, usePageTitle } from '../components/utils.js'
+import { Empty, PathRow, SectionHead } from './parts.jsx'
+import { ICON } from './iconProps.js'
 
-function CategoryTiles({ list }) {
-  return (
-    <ul className="category-tiles">
-      {list.map((c) => (
-        <li key={c.slug}>
-          <Link className="category-tile" to={`/category/${c.slug}`}>
-            <i className={`fa-solid ${c.icon || 'fa-book'}`} aria-hidden="true" />
-            <span>{c.name}</span>
-          </Link>
-        </li>
-      ))}
-    </ul>
-  )
-}
-
-export default function Home() {
-  usePageTitle('Home')
+function HeroSearch() {
   const navigate = useNavigate()
-  const stats = getOverallStats()
-  const categories = getCategories()
-  const skills = getAllSkills().slice(0, 14)
-  const featured = searchCourses({ sort: 'rating' }).slice(0, 6)
-  const platforms = getPlatforms()
-  const paths = getAllPaths().slice(0, 3)
-  const avg = formatRating(stats?.avgRating)
+  // When the palette closes it may hand focus back to this field; skip that one
+  // focus event so the palette does not reopen straight away.
+  const returning = useRef(false)
 
-  const onSearch = (e) => {
+  const open = () => {
+    returning.current = true
+    openPalette()
+  }
+  const onFocus = () => {
+    if (returning.current) {
+      returning.current = false
+      return
+    }
+    open()
+  }
+  const onSubmit = (e) => {
     e.preventDefault()
     const q = new FormData(e.currentTarget).get('q')?.toString().trim() || ''
     navigate(q ? `/search?q=${encodeURIComponent(q)}` : '/courses')
   }
 
   return (
-    <div className="home">
-      <section className="hero">
-        <div className="hero-text">
-          <p className="eyebrow">Course aggregator</p>
-          <h1>Find the right online course, from every platform, in one place.</h1>
-          <p className="hero-lead">
-            Linkbery lists courses from Coursera, Udemy, edX, Guvi, Simplilearn, YouTube and more. Search, filter,
-            compare and save them, then enrol directly with the provider.
-          </p>
-          <form className="hero-search" role="search" onSubmit={onSearch}>
-            <label htmlFor="hero-q" className="visually-hidden">
-              What do you want to learn?
-            </label>
-            <i className="fa-solid fa-magnifying-glass" aria-hidden="true" />
-            <input id="hero-q" name="q" type="search" placeholder="What do you want to learn?" />
-            <button type="submit" className="btn btn-primary">
-              Search
-            </button>
-          </form>
-          <div className="hero-actions">
-            <Link to="/courses" className="btn btn-outline">
-              <i className="fa-solid fa-graduation-cap" aria-hidden="true" /> Browse all courses
-            </Link>
-            <Link to="/recommend" className="btn btn-ghost">
-              <i className="fa-solid fa-wand-magic-sparkles" aria-hidden="true" /> Not sure? Get recommendations
-            </Link>
-          </div>
-        </div>
-        <dl className="hero-stats">
-          <div>
-            <dt>Courses</dt>
-            <dd>{formatNumber(stats?.courseCount)}</dd>
-          </div>
-          <div>
-            <dt>Platforms</dt>
-            <dd>{formatNumber(stats?.platformCount)}</dd>
-          </div>
-          <div>
-            <dt>Skills</dt>
-            <dd>{formatNumber(stats?.skillCount)}</dd>
-          </div>
-          <div>
-            <dt>Avg. rating</dt>
-            <dd>{avg ?? '-'}</dd>
-          </div>
-        </dl>
+    <form className="pg-hero-search" role="search" onSubmit={onSubmit}>
+      <label htmlFor="hero-q" className="visually-hidden">
+        Search courses
+      </label>
+      <Search {...ICON} className="pg-hero-search-icon" />
+      <input
+        id="hero-q"
+        name="q"
+        type="search"
+        className="input pg-hero-input"
+        placeholder="Search courses, skills or providers"
+        autoComplete="off"
+        onFocus={onFocus}
+        onClick={open}
+      />
+      <span className="kbd pg-hero-kbd" aria-hidden="true">
+        Ctrl K
+      </span>
+      <button type="submit" className="btn btn-primary">
+        Search
+      </button>
+    </form>
+  )
+}
+
+export default function Home() {
+  usePageTitle('Home')
+  const stats = getOverallStats()
+  const categories = getCategories()
+  const catCounts = getFacetCounts({}).categories || {}
+  const top = searchCourses({ sort: 'rating' }).slice(0, 5)
+  const paths = getAllPaths().slice(0, 3)
+  const avg = formatRating(stats?.avgRating)
+
+  return (
+    <div className="pg-home">
+      <section className="pg-hero" aria-labelledby="hero-h">
+        <h1 id="hero-h" className="pg-hero-title">
+          Every good course, one search away.
+        </h1>
+        <p className="pg-hero-sub">
+          Courses from Coursera, Udemy, edX, YouTube and more, described the same way so you can filter, compare and
+          pick one. You enrol on the provider’s site.
+        </p>
+        <HeroSearch />
+        <p className="pg-hero-stats">
+          <span>{formatNumber(stats?.courseCount)} courses</span>
+          <span aria-hidden="true"> · </span>
+          <span>{formatNumber(stats?.platformCount)} platforms</span>
+          <span aria-hidden="true"> · </span>
+          <span>{formatNumber(stats?.skillCount)} skills</span>
+          {avg && (
+            <>
+              <span aria-hidden="true"> · </span>
+              <span>
+                <span className="pg-star" aria-hidden="true">
+                  ★
+                </span>{' '}
+                {avg} average
+              </span>
+            </>
+          )}
+        </p>
       </section>
 
-      <section className="home-section" aria-labelledby="h-tech">
-        <div className="section-head">
-          <h2 id="h-tech">Technical</h2>
-          <Link to="/courses">All courses</Link>
-        </div>
-        <CategoryTiles list={categories.filter((c) => c.group === 'technical')} />
-      </section>
-
-      <section className="home-section" aria-labelledby="h-nontech">
-        <div className="section-head">
-          <h2 id="h-nontech">Non-technical</h2>
-        </div>
-        <CategoryTiles list={categories.filter((c) => c.group !== 'technical')} />
-      </section>
-
-      {skills.length > 0 && (
-        <section className="home-section" aria-labelledby="h-skills">
-          <div className="section-head">
-            <h2 id="h-skills">Popular skills</h2>
-          </div>
-          <ul className="chip-list">
-            {skills.map((s) => (
-              <li key={s.name}>
-                <SkillChip to={`/courses?skill=${encodeURIComponent(s.name)}`}>
-                  {s.name} <span className="chip-count">{s.count}</span>
-                </SkillChip>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      <section className="home-section" aria-labelledby="h-featured">
-        <div className="section-head">
-          <h2 id="h-featured">Top rated courses</h2>
-          <Link to="/courses?sort=rating">See all</Link>
-        </div>
-        <CourseGrid
-          courses={featured}
-          label="Top rated courses"
-          empty={<EmptyState title="No courses yet" icon="fa-book-open" />}
-        />
+      <section className="pg-section" aria-labelledby="h-cats">
+        <SectionHead id="h-cats" label="Browse by category" to="/courses" linkText="All courses" />
+        <ul className="pg-cat-grid">
+          {categories.map((c) => (
+            <li key={c.slug}>
+              <Link className="pg-cat-link" to={`/category/${c.slug}`}>
+                <CategoryIcon slug={c.slug} size={16} />
+                <span className="pg-cat-name">{c.name}</span>
+                <span className="pg-mono pg-cat-count">{catCounts[c.slug] ?? 0}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </section>
 
       {paths.length > 0 && (
-        <section className="home-section" aria-labelledby="h-paths">
-          <div className="section-head">
-            <h2 id="h-paths">Learning paths</h2>
-            <Link to="/paths">All learning paths</Link>
-          </div>
-          <ul className="path-grid" aria-label="Learning paths">
+        <section className="pg-section" aria-labelledby="h-paths">
+          <SectionHead id="h-paths" label="Learning paths" to="/paths" linkText="All paths" />
+          <ul className="pg-rows">
             {paths.map((p) => (
               <li key={p.id}>
-                <PathCard path={p} />
+                <PathRow path={p} />
               </li>
             ))}
           </ul>
         </section>
       )}
 
-      {platforms.length > 0 && (
-        <section className="home-section" aria-labelledby="h-platforms">
-          <div className="section-head">
-            <h2 id="h-platforms">Platforms we list</h2>
-            <Link to="/insights">Compare platforms</Link>
-          </div>
-          <ul className="platform-strip">
-            {platforms.map((p) => (
-              <li key={p.slug || p.name}>
-                <Link to={`/courses?platform=${encodeURIComponent(p.name)}`} className="platform-pill">
-                  <PlatformLogo name={p.name} size={28} decorative />
-                  <span>{p.name}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      <section className="pg-section" aria-labelledby="h-top">
+        <SectionHead id="h-top" label="Top rated" to="/courses?sort=rating" linkText="See all" />
+        <CourseList courses={top} empty={<Empty title="No courses yet" />} />
+      </section>
     </div>
   )
 }

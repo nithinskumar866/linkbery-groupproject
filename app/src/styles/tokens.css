@@ -1,0 +1,132 @@
+/*
+ * Linkbery design tokens. The single source of truth for colour, type, spacing
+ * and radius. Dark is the default theme; light is opt-in via
+ * <html data-theme="light">. See DESIGN.md before changing anything here.
+ */
+
+:root,
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  /* Surfaces: flat, layered by lightness, never by shadow */
+  --bg: #09090b;
+  --bg-subtle: #0e0e11;
+  --surface: #121215;
+  --surface-hover: #18181c;
+  --surface-active: #1e1e23;
+  --overlay: rgba(0, 0, 0, 0.6);
+
+  /* Lines */
+  --border: #222227;
+  --border-strong: #303037;
+  --border-focus: #ff5c8a;
+
+  /* Text */
+  --text: #ededef;
+  --text-2: #a0a0a9;
+  --text-3: #6c6c75;
+  --text-inverse: #09090b;
+
+  /* Brand: one sharp "berry" accent, used sparingly */
+  --accent: #ff5c8a;
+  --accent-hover: #ff7aa0;
+  --accent-subtle: rgba(255, 92, 138, 0.12);
+  --accent-text: #ff8fae;
+  --on-accent: #0b0b0d;
+
+  /* Status */
+  --green: #4ade80;
+  --green-subtle: rgba(74, 222, 128, 0.12);
+  --amber: #fbbf24;
+  --amber-subtle: rgba(251, 191, 36, 0.12);
+  --red: #f87171;
+  --red-subtle: rgba(248, 113, 113, 0.12);
+  --blue: #60a5fa;
+  --blue-subtle: rgba(96, 165, 250, 0.12);
+
+  /* Only floating layers (menus, palette, toasts) get a shadow */
+  --shadow-pop: 0 0 0 1px var(--border-strong), 0 16px 48px rgba(0, 0, 0, 0.55);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: #fafafa;
+  --bg-subtle: #f4f4f5;
+  --surface: #ffffff;
+  --surface-hover: #f4f4f5;
+  --surface-active: #ececee;
+  --overlay: rgba(9, 9, 11, 0.4);
+
+  --border: #e4e4e7;
+  --border-strong: #d4d4d8;
+  --border-focus: #d6336c;
+
+  --text: #09090b;
+  --text-2: #52525b;
+  --text-3: #8b8b94;
+  --text-inverse: #fafafa;
+
+  --accent: #d6336c;
+  --accent-hover: #c02659;
+  --accent-subtle: rgba(214, 51, 108, 0.09);
+  --accent-text: #be2a5f;
+  --on-accent: #ffffff;
+
+  --green: #16a34a;
+  --green-subtle: rgba(22, 163, 74, 0.1);
+  --amber: #b45309;
+  --amber-subtle: rgba(180, 83, 9, 0.1);
+  --red: #dc2626;
+  --red-subtle: rgba(220, 38, 38, 0.09);
+  --blue: #2563eb;
+  --blue-subtle: rgba(37, 99, 235, 0.09);
+
+  --shadow-pop: 0 0 0 1px var(--border), 0 12px 32px rgba(9, 9, 11, 0.12);
+}
+
+:root {
+  /* Type */
+  --font-sans: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
+
+  --text-xs: 0.75rem;   /* 12 meta, kbd, labels */
+  --text-sm: 0.8125rem; /* 13 secondary UI */
+  --text-base: 0.875rem;/* 14 body + controls */
+  --text-md: 1rem;      /* 16 card titles */
+  --text-lg: 1.25rem;   /* 20 section titles */
+  --text-xl: 1.75rem;   /* 28 page titles */
+  --text-2xl: 2.75rem;  /* 44 home hero only */
+
+  --leading-tight: 1.15;
+  --leading: 1.5;
+  --tracking-tight: -0.022em;
+  --tracking-label: 0.04em;
+
+  /* Spacing: 4px grid */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Radius: small and consistent; nothing pill-shaped except status dots */
+  --radius-sm: 4px;
+  --radius: 6px;
+  --radius-lg: 10px;
+
+  /* Layout */
+  --topbar-h: 52px;
+  --content-max: 1200px;
+  --filters-w: 232px;
+
+  /* Motion */
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --dur-fast: 90ms;
+  --dur: 160ms;
+}

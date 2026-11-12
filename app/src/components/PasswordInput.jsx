@@ -1,11 +1,12 @@
 import { useState } from 'react'
+import { Eye, EyeOff } from './icons.js'
 
 /** Password input with a show/hide toggle button. Pass id, name, value, onChange etc. */
-export default function PasswordInput(props) {
+export default function PasswordInput({ className = '', ...props }) {
   const [visible, setVisible] = useState(false)
   return (
     <div className="password-input">
-      <input {...props} type={visible ? 'text' : 'password'} className="input" />
+      <input {...props} type={visible ? 'text' : 'password'} className={`input ${className}`.trim()} />
       <button
         type="button"
         className="password-toggle"
@@ -14,7 +15,7 @@ export default function PasswordInput(props) {
         aria-pressed={visible}
         aria-controls={props.id}
       >
-        <i className={`fa-solid ${visible ? 'fa-eye-slash' : 'fa-eye'}`} aria-hidden="true" />
+        {visible ? <EyeOff /> : <Eye />}
       </button>
     </div>
   )

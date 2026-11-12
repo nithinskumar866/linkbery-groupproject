@@ -10,8 +10,7 @@ export default function Search() {
     <CourseListView
       searchMode
       title={q ? 'Search results' : 'Search'}
-      icon="fa-magnifying-glass"
-      subtitle={q ? undefined : 'Search across every course title, provider, platform and skill.'}
+      subtitle={q ? undefined : 'Matches titles, providers, platforms, skills and descriptions.'}
     />
   )
 }

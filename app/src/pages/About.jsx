@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom'
 import { getOverallStats, getPlatforms } from '../lib/courses.js'
-import PageHeader from '../components/PageHeader.jsx'
 import PlatformLogo from '../components/PlatformLogo.jsx'
 import { formatNumber, formatRating, usePageTitle } from '../components/utils.js'
+import { PageHead } from './parts.jsx'
 
 export default function About() {
   usePageTitle('About')
@@ -11,118 +11,102 @@ export default function About() {
   const avg = formatRating(stats?.avgRating)
 
   return (
-    <div className="about-page">
-      <PageHeader title="About Linkbery" icon="fa-circle-info" subtitle="What this site is, and what it is not." />
+    <div className="pg-text">
+      <PageHead title="About" desc="What Linkbery is, and what it is not." />
 
-      <div className="about-grid">
-        <section className="card prose">
-          <h2>What is Linkbery?</h2>
-          <p>
-            Linkbery is a course aggregator. Online courses are spread across many platforms, such as Coursera, Udemy,
-            edX, Guvi, Simplilearn and YouTube, and each one has its own search and its own way of describing levels,
-            prices and skills. Linkbery puts a curated list of those courses in one place, with the same fields for
-            every course, so you can search, filter, compare and save them side by side.
-          </p>
-          <p>
-            We do <strong>not</strong> host or sell any course content. When you choose a course, the “Go to course”
-            button takes you to the provider’s own page, where you enrol, pay (if needed) and learn.
-          </p>
+      <section className="pg-text-section" aria-labelledby="h-what">
+        <h2 id="h-what" className="pg-text-h">
+          A list of courses, not a course provider
+        </h2>
+        <p>
+          Online courses are spread across Coursera, Udemy, edX, Guvi, Simplilearn, YouTube and others, and each describes
+          levels, prices and skills differently. Linkbery keeps a curated list of those courses with the same fields for
+          every one, so you can search, filter, compare and save them in one place.
+        </p>
+        <p>
+          It does not host or sell anything. “Go to course” opens the provider’s page, where you enrol, pay if needed and
+          learn.
+        </p>
+      </section>
 
-          <h2>How it works</h2>
-          <ul className="about-list">
-            <li>
-              <i className="fa-solid fa-magnifying-glass" aria-hidden="true" />
-              <span>
-                <Link to="/courses">Browse and filter</Link> by category, level, platform, rating, price and skill.
-              </span>
-            </li>
-            <li>
-              <i className="fa-solid fa-wand-magic-sparkles" aria-hidden="true" />
-              <span>
-                <Link to="/recommend">Describe a goal</Link> and get matching courses ranked by skill match, rating
-                and level. This runs in your browser using simple keyword matching, not an AI service.
-              </span>
-            </li>
-            <li>
-              <i className="fa-solid fa-chart-column" aria-hidden="true" />
-              <span>
-                <Link to="/insights">Compare platforms</Link> by number of courses, average rating and common skills.
-              </span>
-            </li>
-            <li>
-              <i className="fa-solid fa-bookmark" aria-hidden="true" />
-              <span>Save courses to your profile to come back to them later.</span>
-            </li>
-          </ul>
-
-          <h2>Things to know</h2>
-          <ul className="about-list">
-            <li>
-              <i className="fa-solid fa-triangle-exclamation" aria-hidden="true" />
-              <span>
-                Ratings, review counts and prices were copied from public listings at the time they were collected and
-                may be out of date. Always check the provider’s page before enrolling.
-              </span>
-            </li>
-            <li>
-              <i className="fa-solid fa-lock" aria-hidden="true" />
-              <span>
-                Accounts are a demo: there is no server. Your login and saved courses are kept only in this browser’s
-                storage.
-              </span>
-            </li>
-            <li>
-              <i className="fa-solid fa-users" aria-hidden="true" />
-              <span>Linkbery is a student group project and is not affiliated with any of the platforms listed.</span>
-            </li>
-          </ul>
-        </section>
-
-        <aside className="about-side">
-          <div className="card">
-            <h2>The catalogue right now</h2>
-            <dl className="stat-tiles stat-tiles-compact">
-              <div className="stat-tile">
-                <dt>Courses</dt>
-                <dd>{formatNumber(stats?.courseCount)}</dd>
-              </div>
-              <div className="stat-tile">
-                <dt>Platforms</dt>
-                <dd>{formatNumber(stats?.platformCount)}</dd>
-              </div>
-              <div className="stat-tile">
-                <dt>Skills</dt>
-                <dd>{formatNumber(stats?.skillCount)}</dd>
-              </div>
-              <div className="stat-tile">
-                <dt>Avg. rating</dt>
-                <dd>{avg ?? 'n/a'}</dd>
-              </div>
-            </dl>
-            <p className="field-hint">Counted live from the course list.</p>
+      <section className="pg-text-section" aria-labelledby="h-how">
+        <h2 id="h-how" className="pg-text-h">
+          What you can do
+        </h2>
+        <dl className="pg-deflist">
+          <div>
+            <dt>
+              <Link to="/courses">Courses</Link>
+            </dt>
+            <dd>Filter by category, level, platform, rating, price and skill.</dd>
           </div>
-          {platforms.length > 0 && (
-            <div className="card">
-              <h2>Platforms</h2>
-              <ul className="about-platforms">
-                {platforms.map((p) => (
-                  <li key={p.slug || p.name}>
-                    <PlatformLogo name={p.name} size={28} decorative />
-                    {p.url ? (
-                      <a href={p.url} target="_blank" rel="noopener noreferrer">
-                        {p.name}
-                        <span className="visually-hidden"> (opens in a new tab)</span>
-                      </a>
-                    ) : (
-                      <span>{p.name}</span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </aside>
-      </div>
+          <div>
+            <dt>
+              <Link to="/compare">Compare</Link>
+            </dt>
+            <dd>Put up to three courses side by side and share the comparison as a link.</dd>
+          </div>
+          <div>
+            <dt>
+              <Link to="/paths">Paths</Link>
+            </dt>
+            <dd>Follow an ordered set of courses towards one goal and track each step.</dd>
+          </div>
+          <div>
+            <dt>
+              <Link to="/recommend">Recommend</Link>
+            </dt>
+            <dd>Describe a goal and get courses ranked by skill match, rating and level. Plain keyword matching, run in your browser.</dd>
+          </div>
+          <div>
+            <dt>
+              <Link to="/insights">Insights</Link>
+            </dt>
+            <dd>See course counts, ratings and common skills per platform.</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section className="pg-text-section" aria-labelledby="h-know">
+        <h2 id="h-know" className="pg-text-h">
+          Good to know
+        </h2>
+        <ul className="pg-text-list">
+          <li>
+            Ratings, review counts and prices were copied from public listings when they were collected and may be out of
+            date. Check the provider’s page before you enrol.
+          </li>
+          <li>Accounts are a demo. There is no server: your login, saved courses and progress stay in this browser.</li>
+          <li>Linkbery is a student group project and is not affiliated with any platform listed.</li>
+        </ul>
+      </section>
+
+      <section className="pg-text-section" aria-labelledby="h-numbers">
+        <h2 id="h-numbers" className="pg-text-h">
+          The catalogue
+        </h2>
+        <p className="pg-mono pg-text-stats">
+          {formatNumber(stats?.courseCount)} courses · {formatNumber(stats?.platformCount)} platforms ·{' '}
+          {formatNumber(stats?.skillCount)} skills{avg ? ` · ${avg} avg rating` : ''}
+        </p>
+        {platforms.length > 0 && (
+          <ul className="pg-plat-list">
+            {platforms.map((p) => (
+              <li key={p.slug || p.name}>
+                <PlatformLogo name={p.name} size={20} decorative />
+                {p.url ? (
+                  <a href={p.url} target="_blank" rel="noopener noreferrer">
+                    {p.name}
+                    <span className="visually-hidden"> (opens in a new tab)</span>
+                  </a>
+                ) : (
+                  <span>{p.name}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   )
 }

@@ -1,22 +1,65 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { useId, useRef } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Bookmark, CircleCheck, CircleDot, LogOut, Pencil, Route } from 'lucide-react'
 import { getCourseById } from '../lib/courses.js'
+import { getAllPaths, getPathProgress } from '../lib/paths.js'
+import { STATUSES } from '../lib/progress.js'
 import { useAuth } from '../hooks/useAuth.js'
+import { useProgress } from '../hooks/useProgress.js'
 import { useSaved } from '../hooks/useSaved.js'
 import Avatar from '../components/Avatar.jsx'
-import CourseGrid from '../components/CourseGrid.jsx'
-import EmptyState from '../components/EmptyState.jsx'
-import MyLearning from '../components/MyLearning.jsx'
+import CourseList from '../components/CourseList.jsx'
+import { STATUS_META } from '../components/statusMeta.js'
 import { formatDate, usePageTitle } from '../components/utils.js'
+import { Empty, PathRow } from './parts.jsx'
+import { ICON } from './iconProps.js'
+
+const TABS = ['saved', ...STATUSES, 'paths']
+const LABEL = { saved: 'Saved', paths: 'Paths' }
+const tabLabel = (t) => LABEL[t] || STATUS_META[t]?.label || t
+
+const EMPTY = {
+  saved: { icon: Bookmark, title: 'No saved courses', hint: 'Use the bookmark on any course to keep it here.' },
+  planning: { icon: CircleDot, title: 'Nothing planned', hint: 'Set a course to “Planning” on its page to line it up.' },
+  'in-progress': { icon: CircleDot, title: 'Nothing in progress', hint: 'Courses you are taking show up here.' },
+  completed: { icon: CircleCheck, title: 'Nothing completed yet', hint: 'Finished courses show up here.' },
+  paths: { icon: Route, title: 'No paths started', hint: 'Set a status on any course in a path to start tracking it.' },
+}
 
 export default function Profile() {
   usePageTitle('My profile')
+  const uid = useId()
   const { user, logOut } = useAuth()
   const { savedIds } = useSaved()
+  const { progress } = useProgress()
   const navigate = useNavigate()
-  if (!user) return null // ProtectedRoute handles redirect
+  const [sp, setSp] = useSearchParams()
+  const tabRefs = useRef({})
+  if (!user) return null // ProtectedRoute handles the redirect
+
+  const tab = TABS.includes(sp.get('tab')) ? sp.get('tab') : 'saved'
+  const setTab = (t) => setSp(t === 'saved' ? {} : { tab: t }, { replace: true })
 
   const saved = (savedIds || []).map((id) => getCourseById(id)).filter(Boolean)
-  const platforms = new Set(saved.map((c) => c.platform).filter(Boolean))
+  // Newest first within each status.
+  const entries = Object.entries(progress || {}).sort((a, b) =>
+    String(b[1]?.updatedAt || '').localeCompare(String(a[1]?.updatedAt || '')),
+  )
+  const byStatus = Object.fromEntries(
+    STATUSES.map((s) => [
+      s,
+      entries
+        .filter(([, v]) => v?.status === s)
+        .map(([id]) => getCourseById(id))
+        .filter(Boolean),
+    ]),
+  )
+  const startedPaths = getAllPaths().filter((p) => p.steps.some((st) => progress?.[st.courseId]?.status))
+  const counts = {
+    saved: saved.length,
+    ...Object.fromEntries(STATUSES.map((s) => [s, byStatus[s].length])),
+    paths: startedPaths.length,
+  }
   const since = formatDate(user.createdAt)
 
   const onLogout = async () => {
@@ -24,73 +67,102 @@ export default function Profile() {
     navigate('/')
   }
 
+  const onKeyDown = (e) => {
+    const i = TABS.indexOf(tab)
+    let next = null
+    if (e.key === 'ArrowRight') next = TABS[(i + 1) % TABS.length]
+    if (e.key === 'ArrowLeft') next = TABS[(i - 1 + TABS.length) % TABS.length]
+    if (e.key === 'Home') next = TABS[0]
+    if (e.key === 'End') next = TABS[TABS.length - 1]
+    if (next) {
+      e.preventDefault()
+      setTab(next)
+      tabRefs.current[next]?.focus()
+    }
+  }
+
+  const empty = EMPTY[tab]
+  const emptyNode = (
+    <Empty icon={empty.icon} title={empty.title} hint={empty.hint}>
+      <Link className="btn btn-sm" to={tab === 'paths' ? '/paths' : '/courses'}>
+        {tab === 'paths' ? 'Browse paths' : 'Browse courses'}
+      </Link>
+    </Empty>
+  )
+
   return (
-    <div className="profile-page">
-      <section className="card profile-card">
-        <Avatar user={user} size={96} />
-        <div className="profile-info">
-          <h1>{user.name}</h1>
-          <p className="muted profile-email">{user.email}</p>
-          <p className="profile-role">
-            <span className="tag">{user.role || 'Student'}</span>
-            {since && <span className="muted">Member since {since}</span>}
+    <div className="pg-profile">
+      <header className="pg-profile-head">
+        <Avatar user={user} size={48} />
+        <div className="pg-profile-id">
+          <h1 className="pg-profile-name">{user.name}</h1>
+          <p className="pg-profile-meta">
+            <span>{user.email}</span>
+            {since && (
+              <>
+                <span aria-hidden="true"> · </span>
+                <span>Member since {since}</span>
+              </>
+            )}
           </p>
         </div>
-        <dl className="profile-stats">
-          <div>
-            <dt>Saved courses</dt>
-            <dd>{saved.length}</dd>
-          </div>
-          <div>
-            <dt>Platforms</dt>
-            <dd>{platforms.size}</dd>
-          </div>
-        </dl>
-        <div className="profile-actions">
-          <Link className="btn btn-primary" to="/profile/edit">
-            <i className="fa-solid fa-user-pen" aria-hidden="true" /> Edit profile
+        <div className="pg-head-actions">
+          <Link className="btn btn-sm" to="/profile/edit">
+            <Pencil {...ICON} /> Edit profile
           </Link>
-          <button type="button" className="btn btn-outline" onClick={onLogout}>
-            <i className="fa-solid fa-right-from-bracket" aria-hidden="true" /> Log out
+          <button type="button" className="btn btn-ghost btn-sm" onClick={onLogout}>
+            <LogOut {...ICON} /> Log out
           </button>
         </div>
-      </section>
+      </header>
 
-      <MyLearning />
-
-      <section className="home-section" aria-labelledby="h-saved">
-        <div className="section-head">
-          <h2 id="h-saved">
-            <i className="fa-solid fa-bookmark" aria-hidden="true" /> Saved courses
-          </h2>
-          {saved.length > 0 && <Link to="/courses">Find more</Link>}
-        </div>
-        <CourseGrid
-          courses={saved}
-          label="Saved courses"
-          empty={
-            <EmptyState
-              icon="fa-bookmark"
-              title="No saved courses yet"
-              actions={
-                <>
-                  <Link className="btn btn-primary" to="/courses">
-                    Browse courses
-                  </Link>
-                  <Link className="btn btn-outline" to="/recommend">
-                    Get recommendations
-                  </Link>
-                </>
-              }
+      <div className="pg-tabs" role="tablist" aria-label="Your courses" onKeyDown={onKeyDown}>
+        {TABS.map((t) => {
+          const selected = tab === t
+          return (
+            <button
+              key={t}
+              ref={(el) => {
+                tabRefs.current[t] = el
+              }}
+              type="button"
+              role="tab"
+              id={`${uid}-tab-${t}`}
+              aria-selected={selected}
+              aria-controls={`${uid}-panel`}
+              tabIndex={selected ? 0 : -1}
+              className={`pg-tab ${selected ? 'is-active' : ''}`}
+              onClick={() => setTab(t)}
             >
-              <p>
-                Tap the <i className="fa-regular fa-bookmark" aria-hidden="true" />
-                <span className="visually-hidden">bookmark</span> icon on any course to keep it here.
-              </p>
-            </EmptyState>
-          }
-        />
-      </section>
+              {tabLabel(t)}
+              <span className="pg-tab-count">{counts[t]}</span>
+            </button>
+          )
+        })}
+      </div>
+
+      <div role="tabpanel" id={`${uid}-panel`} aria-labelledby={`${uid}-tab-${tab}`} className="pg-tab-panel">
+        {tab === 'paths' ? (
+          startedPaths.length === 0 ? (
+            emptyNode
+          ) : (
+            <ul className="pg-rows">
+              {startedPaths.map((p) => (
+                <li key={p.id}>
+                  <PathRow path={{ ...p, description: progressText(p, progress) }} />
+                </li>
+              ))}
+            </ul>
+          )
+        ) : (
+          <CourseList courses={tab === 'saved' ? saved : byStatus[tab]} empty={emptyNode} />
+        )}
+      </div>
     </div>
   )
+}
+
+function progressText(path, progress) {
+  const p = getPathProgress(path.id, progress)
+  return `${p.completed} of ${p.total} done${p.inProgress ? `, ${p.inProgress} in progress` : ''}`
 }

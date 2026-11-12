@@ -1,35 +1,37 @@
 import { Link } from 'react-router-dom'
+import { ArrowUpRight, ChartColumn } from 'lucide-react'
 import { getAllSkills, getOverallStats, getPlatformInsights } from '../lib/courses.js'
-import EmptyState from '../components/EmptyState.jsx'
-import PageHeader from '../components/PageHeader.jsx'
 import PlatformLogo from '../components/PlatformLogo.jsx'
-import SkillChip from '../components/SkillChip.jsx'
 import { LEVELS, formatCount, formatNumber, formatRating, usePageTitle } from '../components/utils.js'
+import { Empty, PageHead } from './parts.jsx'
+import { ICON } from './iconProps.js'
 
-/** Horizontal CSS bar chart. rows: [{ key, label, value, display, to? }] */
-function BarChart({ title, caption, rows, max }) {
+/** Thin horizontal CSS bars. rows: [{ key, label, value, display, to? }] */
+function Bars({ id, title, caption, rows, max }) {
   const top = max ?? Math.max(0, ...rows.map((r) => r.value || 0))
   return (
-    <figure className="card bar-chart">
+    <figure className="pg-chart" aria-labelledby={id}>
       <figcaption>
-        <h2>{title}</h2>
+        <h2 id={id} className="section-label">
+          {title}
+        </h2>
         {caption && <p className="field-hint">{caption}</p>}
       </figcaption>
       {rows.length === 0 ? (
-        <p className="muted">No data yet.</p>
+        <p className="pg-dim">No data yet.</p>
       ) : (
-        <ul>
+        <ul className="pg-bars">
           {rows.map((r) => {
             const pct = top > 0 && r.value ? Math.max(1, (r.value / top) * 100) : 0
             return (
-              <li key={r.key} className="bar-row">
-                <span className="bar-label" title={r.label}>
+              <li key={r.key} className="pg-bar">
+                <span className="pg-bar-label" title={r.label}>
                   {r.to ? <Link to={r.to}>{r.label}</Link> : r.label}
                 </span>
-                <span className="bar-track" aria-hidden="true">
-                  <span className="bar-fill" style={{ width: `${pct}%` }} />
+                <span className="pg-bar-track" aria-hidden="true">
+                  <span className="pg-bar-fill" style={{ width: `${pct}%` }} />
                 </span>
-                <span className="bar-value">{r.display}</span>
+                <span className="pg-bar-value">{r.display}</span>
               </li>
             )
           })}
@@ -39,32 +41,7 @@ function BarChart({ title, caption, rows, max }) {
   )
 }
 
-function LevelBar({ levels }) {
-  const entries = Object.entries(levels || {}).filter(([, n]) => n > 0)
-  const total = entries.reduce((s, [, n]) => s + n, 0)
-  if (total === 0) return null
-  const order = (k) => {
-    const i = LEVELS.indexOf(k)
-    return i === -1 ? 99 : i
-  }
-  entries.sort((a, b) => order(a[0]) - order(b[0]))
-  return (
-    <div className="level-bar-wrap">
-      <div className="level-bar" aria-hidden="true">
-        {entries.map(([k, n]) => (
-          <span key={k} className={`level-seg level-${k.toLowerCase()}`} style={{ width: `${(n / total) * 100}%` }} />
-        ))}
-      </div>
-      <ul className="level-legend">
-        {entries.map(([k, n]) => (
-          <li key={k}>
-            <span className={`level-dot level-${k.toLowerCase()}`} aria-hidden="true" /> {k}: {n}
-          </li>
-        ))}
-      </ul>
-    </div>
-  )
-}
+const LEVEL_ABBR = { Beginner: 'B', Intermediate: 'I', Advanced: 'A', Mixed: 'M' }
 
 export default function Insights() {
   usePageTitle('Platform insights')
@@ -97,101 +74,117 @@ export default function Insights() {
   }))
 
   return (
-    <div className="insights-page">
-      <PageHeader
-        title="Platform insights"
-        icon="fa-chart-column"
-        subtitle="How the platforms we list compare, computed live from the courses in Linkbery. Ratings are the providers' own public ratings."
+    <div className="pg-insights">
+      <PageHead
+        title="Insights"
+        desc="How the listed platforms compare, computed from the course list. Ratings are the providers’ own."
       />
 
-      <dl className="stat-tiles">
-        <div className="stat-tile">
+      <dl className="pg-stats">
+        <div>
           <dt>Courses</dt>
           <dd>{formatNumber(stats?.courseCount)}</dd>
         </div>
-        <div className="stat-tile">
+        <div>
           <dt>Platforms</dt>
           <dd>{formatNumber(stats?.platformCount)}</dd>
         </div>
-        <div className="stat-tile">
-          <dt>Distinct skills</dt>
+        <div>
+          <dt>Skills</dt>
           <dd>{formatNumber(stats?.skillCount)}</dd>
         </div>
-        <div className="stat-tile">
-          <dt>Average rating</dt>
-          <dd>{avg ? <>{avg}<small> / 5</small></> : 'n/a'}</dd>
+        <div>
+          <dt>Avg rating</dt>
+          <dd>{avg ?? 'n/a'}</dd>
         </div>
       </dl>
 
       {insights.length === 0 ? (
-        <EmptyState icon="fa-chart-column" title="No platform data yet" />
+        <Empty icon={ChartColumn} title="No platform data yet" />
       ) : (
         <>
-          <div className="chart-grid">
-            <BarChart title="Courses per platform" rows={countRows} />
-            <BarChart
-              title="Average rating per platform"
-              caption="Out of 5. Platforms without rated courses show n/a."
-              rows={ratingRows}
-              max={5}
-            />
-            <BarChart title="Most common skills" caption="Number of courses teaching each skill." rows={skillRows} />
+          <div className="pg-chart-grid">
+            <Bars id="h-count" title="Courses per platform" rows={countRows} />
+            <Bars id="h-rating" title="Average rating" caption="Out of 5." rows={ratingRows} max={5} />
+            <Bars id="h-skills" title="Most common skills" caption="Courses teaching each skill." rows={skillRows} />
           </div>
 
-          <h2 className="results-heading">Platforms</h2>
-          <ul className="platform-cards">
-            {insights.map((p) => {
-              const r = formatRating(p.avgRating)
-              return (
-                <li key={p.platform.name} className="card platform-card">
-                  <div className="platform-card-head">
-                    <PlatformLogo name={p.platform.name} size={48} />
-                    <div>
-                      <h3>{p.platform.name}</h3>
-                      {p.platform.url && (
-                        <a href={p.platform.url} target="_blank" rel="noopener noreferrer" className="small-link">
-                          Visit site <i className="fa-solid fa-arrow-up-right-from-square" aria-hidden="true" />
-                          <span className="visually-hidden"> (opens in a new tab)</span>
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                  <dl className="platform-card-stats">
-                    <div>
-                      <dt>Courses</dt>
-                      <dd>{formatNumber(p.courseCount)}</dd>
-                    </div>
-                    <div>
-                      <dt>Avg. rating</dt>
-                      <dd>{r ?? 'n/a'}</dd>
-                    </div>
-                    <div>
-                      <dt>Reviews</dt>
-                      <dd>{p.totalReviews ? formatCount(p.totalReviews) : '-'}</dd>
-                    </div>
-                  </dl>
-                  <LevelBar levels={p.levels} />
-                  {p.topSkills?.length > 0 && (
-                    <>
-                      <h4 className="platform-card-sub">Top skills</h4>
-                      <ul className="chip-list">
-                        {p.topSkills.map((s) => (
-                          <li key={s.name}>
-                            <SkillChip to={`/courses?platform=${encodeURIComponent(p.platform.name)}&skill=${encodeURIComponent(s.name)}`}>
-                              {s.name}
-                            </SkillChip>
-                          </li>
-                        ))}
-                      </ul>
-                    </>
-                  )}
-                  <Link className="btn btn-outline btn-sm platform-card-cta" to={`/courses?platform=${encodeURIComponent(p.platform.name)}`}>
-                    Browse {formatNumber(p.courseCount)} {p.courseCount === 1 ? 'course' : 'courses'}
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
+          <section className="pg-section" aria-labelledby="h-platforms">
+            <div className="pg-section-head">
+              <h2 id="h-platforms" className="section-label">
+                Platforms <span className="pg-count">· {insights.length}</span>
+              </h2>
+            </div>
+            <div className="pg-table-scroll" role="region" aria-labelledby="h-platforms" tabIndex={0}>
+              <table className="pg-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Platform</th>
+                    <th scope="col" className="pg-num">
+                      Courses
+                    </th>
+                    <th scope="col" className="pg-num">
+                      Rating
+                    </th>
+                    <th scope="col" className="pg-num">
+                      Reviews
+                    </th>
+                    <th scope="col">
+                      <abbr title="Beginner / Intermediate / Advanced / Mixed">Levels</abbr>
+                    </th>
+                    <th scope="col">Top skills</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {insights.map((p) => {
+                    const r = formatRating(p.avgRating)
+                    const levels = LEVELS.filter((l) => p.levels?.[l] > 0)
+                      .map((l) => `${LEVEL_ABBR[l]} ${p.levels[l]}`)
+                      .join(' · ')
+                    return (
+                      <tr key={p.platform.name}>
+                        <th scope="row">
+                          <span className="pg-plat">
+                            <PlatformLogo name={p.platform.name} size={20} decorative />
+                            <Link to={`/courses?platform=${encodeURIComponent(p.platform.name)}`}>
+                              {p.platform.name}
+                            </Link>
+                            {p.platform.url && (
+                              <a
+                                className="pg-plat-ext"
+                                href={p.platform.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label={`${p.platform.name} website (opens in a new tab)`}
+                              >
+                                <ArrowUpRight {...ICON} size={14} />
+                              </a>
+                            )}
+                          </span>
+                        </th>
+                        <td className="pg-num">{formatNumber(p.courseCount)}</td>
+                        <td className="pg-num">{r ?? '-'}</td>
+                        <td className="pg-num">{p.totalReviews ? formatCount(p.totalReviews) : '-'}</td>
+                        <td className="pg-mono pg-nowrap">{levels || '-'}</td>
+                        <td className="pg-skills-cell">
+                          {(p.topSkills || []).slice(0, 3).map((s, i) => (
+                            <span key={s.name}>
+                              {i > 0 && ', '}
+                              <Link
+                                to={`/courses?platform=${encodeURIComponent(p.platform.name)}&skill=${encodeURIComponent(s.name)}`}
+                              >
+                                {s.name}
+                              </Link>
+                            </span>
+                          ))}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </section>
         </>
       )}
     </div>

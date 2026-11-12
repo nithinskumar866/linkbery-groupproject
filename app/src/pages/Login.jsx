@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Link, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth.js'
-import DemoNotice from '../components/DemoNotice.jsx'
 import PasswordInput from '../components/PasswordInput.jsx'
 import { EMAIL_RE, returnPath, usePageTitle } from '../components/utils.js'
+import { DemoLine, Note } from './parts.jsx'
 
 function validate({ email, password }) {
   const errors = {}
@@ -48,28 +48,27 @@ export default function Login() {
   }
 
   return (
-    <div className="auth-page">
-      <div className="card auth-card">
-        <h1>
-          <i className="fa-solid fa-right-to-bracket" aria-hidden="true" /> Log in
-        </h1>
-        <p className="muted">Welcome back. Log in to save courses and see them on your profile.</p>
+    <div className="pg-auth">
+      <div className="panel pg-auth-panel">
+        <h1 className="pg-auth-title">Log in</h1>
+        <p className="pg-auth-sub">Save courses and track your progress.</p>
 
         {message && (
-          <div className="alert alert-warn" role="status">
-            <i className="fa-solid fa-lock" aria-hidden="true" /> <span>{message}</span>
-          </div>
+          <Note type="warn" role="status">
+            {message}
+          </Note>
         )}
-        <DemoNotice />
         {formError && (
-          <div className="alert alert-error" role="alert">
-            <i className="fa-solid fa-circle-exclamation" aria-hidden="true" /> <span>{formError}</span>
-          </div>
+          <Note type="error" role="alert">
+            {formError}
+          </Note>
         )}
 
-        <form onSubmit={onSubmit} noValidate>
+        <form className="pg-form" onSubmit={onSubmit} noValidate>
           <div className="field">
-            <label htmlFor="login-email">Email</label>
+            <label className="field-label" htmlFor="login-email">
+              Email
+            </label>
             <input
               id="login-email"
               name="email"
@@ -82,10 +81,16 @@ export default function Login() {
               aria-describedby={errors.email ? 'login-email-err' : undefined}
               required
             />
-            {errors.email && <span id="login-email-err" className="field-error">{errors.email}</span>}
+            {errors.email && (
+              <span id="login-email-err" className="field-error">
+                {errors.email}
+              </span>
+            )}
           </div>
           <div className="field">
-            <label htmlFor="login-password">Password</label>
+            <label className="field-label" htmlFor="login-password">
+              Password
+            </label>
             <PasswordInput
               id="login-password"
               name="password"
@@ -96,17 +101,23 @@ export default function Login() {
               aria-describedby={errors.password ? 'login-password-err' : undefined}
               required
             />
-            {errors.password && <span id="login-password-err" className="field-error">{errors.password}</span>}
+            {errors.password && (
+              <span id="login-password-err" className="field-error">
+                {errors.password}
+              </span>
+            )}
           </div>
-          <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={busy}>
+          <button type="submit" className="btn btn-primary pg-btn-block" disabled={busy}>
             {busy ? 'Logging in…' : 'Log in'}
           </button>
         </form>
 
-        <p className="auth-switch">
-          New to Linkbery?{' '}
+        <DemoLine />
+
+        <p className="pg-auth-switch">
+          No account?{' '}
           <Link to="/register" state={location.state}>
-            Create an account
+            Create one
           </Link>
         </p>
       </div>

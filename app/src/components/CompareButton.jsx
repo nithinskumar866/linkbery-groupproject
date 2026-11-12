@@ -1,4 +1,5 @@
 import { useCompare } from '../hooks/useCompare.js'
+import { GitCompareArrows } from './icons.js'
 import { showToast } from './toast.js'
 
 /** "Add to compare" toggle. Works for guests. Shows the lib's "up to 3" error as a toast. */
@@ -6,7 +7,8 @@ export default function CompareButton({ courseId, courseTitle, variant = 'compac
   const { isInCompare, addToCompare, removeFromCompare } = useCompare()
   const active = isInCompare(courseId)
 
-  const onClick = () => {
+  const onClick = (e) => {
+    e.stopPropagation()
     if (active) {
       removeFromCompare(courseId)
       return
@@ -19,32 +21,30 @@ export default function CompareButton({ courseId, courseTitle, variant = 'compac
   }
 
   const label = active ? 'Remove from compare' : 'Add to compare'
-  const icon = active ? 'fa-solid fa-square-check' : 'fa-regular fa-square'
 
   if (variant === 'full') {
     return (
       <button
         type="button"
-        className={`btn btn-outline compare-btn-full ${active ? 'is-active' : ''}`}
+        className={`btn compare-btn-full ${active ? 'is-active' : ''}`}
         onClick={onClick}
         aria-pressed={active}
       >
-        <i className="fa-solid fa-code-compare" aria-hidden="true" />
-        {active ? 'In compare list' : 'Add to compare'}
+        <GitCompareArrows />
+        {active ? 'In compare' : 'Compare'}
       </button>
     )
   }
   return (
     <button
       type="button"
-      className={`compare-toggle ${active ? 'is-active' : ''}`}
+      className={`btn btn-ghost btn-icon btn-sm action-btn compare-toggle ${active ? 'is-active' : ''}`}
       onClick={onClick}
       aria-pressed={active}
       aria-label={courseTitle ? `${label}: ${courseTitle}` : label}
-      title={label}
+      data-tip={active ? 'In compare' : 'Compare'}
     >
-      <i className={icon} aria-hidden="true" />
-      <span>Compare</span>
+      <GitCompareArrows />
     </button>
   )
 }

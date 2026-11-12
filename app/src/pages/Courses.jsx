@@ -5,9 +5,8 @@ export default function Courses() {
   usePageTitle('All courses')
   return (
     <CourseListView
-      title="All courses"
-      icon="fa-graduation-cap"
-      subtitle="Filter by category, level, platform, rating, price and skill. The filters are saved in the address bar, so you can share the link."
+      title="Courses"
+      subtitle="Filter by category, level, platform, rating and price. Filters are kept in the URL, so you can share any view."
     />
   )
 }

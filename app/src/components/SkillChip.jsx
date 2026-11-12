@@ -1,16 +1,18 @@
 import { Link } from 'react-router-dom'
+import { X } from './icons.js'
 
 /**
- * A small pill. Renders as a link (to), a removable button (onRemove),
- * a clickable button (onClick) or plain text.
+ * A .tag. Renders as a link (to), a removable button (onRemove),
+ * a toggle button (onClick) or plain text.
+ * variant: "match" (green, e.g. matched or shared skills), "outline" (same as default).
  */
 export default function SkillChip({ children, to, onClick, onRemove, active = false, variant = '', title }) {
-  const cls = `chip ${active ? 'chip-active' : ''} ${variant ? `chip-${variant}` : ''}`.trim()
+  const cls = ['tag', active ? 'is-active' : '', variant === 'match' ? 'tag-green' : ''].filter(Boolean).join(' ')
   if (onRemove) {
     return (
-      <button type="button" className={`${cls} chip-removable`} onClick={onRemove} title={title}>
+      <button type="button" className={`${cls} tag-removable`} onClick={onRemove} title={title}>
         <span>{children}</span>
-        <i className="fa-solid fa-xmark" aria-hidden="true" />
+        <X aria-hidden="true" />
         <span className="visually-hidden">(remove)</span>
       </button>
     )

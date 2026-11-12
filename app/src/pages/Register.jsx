@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Link, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth.js'
-import DemoNotice from '../components/DemoNotice.jsx'
 import PasswordInput from '../components/PasswordInput.jsx'
 import { EMAIL_RE, returnPath, usePageTitle } from '../components/utils.js'
+import { DemoLine, Note } from './parts.jsx'
 
 function validate({ name, email, password, confirm }) {
   const errors = {}
@@ -47,60 +47,71 @@ export default function Register() {
     }
   }
 
+  const describedBy = (name, hint) => {
+    if (errors[name]) return `reg-${name}-err`
+    return hint ? `reg-${name}-hint` : undefined
+  }
+
   const field = (name, label, input, hint) => (
     <div className="field">
-      <label htmlFor={`reg-${name}`}>{label}</label>
+      <label className="field-label" htmlFor={`reg-${name}`}>
+        {label}
+      </label>
       {input}
-      {hint && !errors[name] && <span className="field-hint" id={`reg-${name}-hint`}>{hint}</span>}
-      {errors[name] && <span id={`reg-${name}-err`} className="field-error">{errors[name]}</span>}
+      {hint && !errors[name] && (
+        <span className="field-hint" id={`reg-${name}-hint`}>
+          {hint}
+        </span>
+      )}
+      {errors[name] && (
+        <span id={`reg-${name}-err`} className="field-error">
+          {errors[name]}
+        </span>
+      )}
     </div>
   )
-  const common = (name) => ({
+  const common = (name, hint) => ({
     id: `reg-${name}`,
     name,
     value: values[name],
     onChange,
     'aria-invalid': Boolean(errors[name]),
-    'aria-describedby': errors[name] ? `reg-${name}-err` : undefined,
+    'aria-describedby': describedBy(name, hint),
     required: true,
   })
 
+  const pwHint = 'At least 6 characters.'
+
   return (
-    <div className="auth-page">
-      <div className="card auth-card">
-        <h1>
-          <i className="fa-solid fa-user-plus" aria-hidden="true" /> Create an account
-        </h1>
-        <p className="muted">Save courses you like and come back to them later.</p>
+    <div className="pg-auth">
+      <div className="panel pg-auth-panel">
+        <h1 className="pg-auth-title">Create an account</h1>
+        <p className="pg-auth-sub">Keep a list of courses and track what you are taking.</p>
         {location.state?.message && (
-          <div className="alert alert-warn" role="status">
-            <i className="fa-solid fa-lock" aria-hidden="true" /> <span>{location.state.message}</span>
-          </div>
+          <Note type="warn" role="status">
+            {location.state.message}
+          </Note>
         )}
-        <DemoNotice />
         {formError && (
-          <div className="alert alert-error" role="alert">
-            <i className="fa-solid fa-circle-exclamation" aria-hidden="true" /> <span>{formError}</span>
-          </div>
+          <Note type="error" role="alert">
+            {formError}
+          </Note>
         )}
 
-        <form onSubmit={onSubmit} noValidate>
+        <form className="pg-form" onSubmit={onSubmit} noValidate>
           {field('name', 'Name', <input {...common('name')} type="text" className="input" autoComplete="name" />)}
           {field('email', 'Email', <input {...common('email')} type="email" className="input" autoComplete="email" />)}
-          {field(
-            'password',
-            'Password',
-            <PasswordInput {...common('password')} autoComplete="new-password" />,
-            'At least 6 characters.',
-          )}
+          {field('password', 'Password', <PasswordInput {...common('password', pwHint)} autoComplete="new-password" />, pwHint)}
           {field('confirm', 'Confirm password', <PasswordInput {...common('confirm')} autoComplete="new-password" />)}
-          <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={busy}>
+          <button type="submit" className="btn btn-primary pg-btn-block" disabled={busy}>
             {busy ? 'Creating account…' : 'Create account'}
           </button>
         </form>
 
-        <p className="auth-switch">
-          Already have an account?{' '}
+        <DemoLine />
+
+        <p className="pg-auth-switch">
+          Have an account?{' '}
           <Link to="/login" state={location.state}>
             Log in
           </Link>

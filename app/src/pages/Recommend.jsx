@@ -1,11 +1,10 @@
 import { useId } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { Lightbulb, SearchX } from 'lucide-react'
 import { recommendCourses } from '../lib/courses.js'
-import CourseCard from '../components/CourseCard.jsx'
-import EmptyState from '../components/EmptyState.jsx'
-import PageHeader from '../components/PageHeader.jsx'
-import SkillChip from '../components/SkillChip.jsx'
+import CourseList from '../components/CourseList.jsx'
 import { usePageTitle } from '../components/utils.js'
+import { Empty, Meter, PageHead } from './parts.jsx'
 
 const EXAMPLES = [
   'Python for data analysis',
@@ -27,6 +26,7 @@ export default function Recommend() {
   const goal = (sp.get('goal') || '').trim()
   const level = LEVEL_OPTIONS.includes(sp.get('level')) ? sp.get('level') : ''
   const results = goal ? recommendCourses(goal, { level: level || undefined, limit: 9 }) : []
+  const byId = new Map(results.filter((r) => r.course).map((r) => [r.course.id, r]))
 
   const run = (nextGoal, nextLevel = level) => {
     const next = new URLSearchParams()
@@ -42,17 +42,18 @@ export default function Recommend() {
   }
 
   return (
-    <div className="recommend-page">
-      <PageHeader
-        title="What do you want to learn?"
-        icon="fa-wand-magic-sparkles"
-        subtitle="Describe your goal in a few words. We match it against course skills, titles and categories, then favour well-rated courses at your level."
+    <div className="pg-recommend">
+      <PageHead
+        title="Recommend"
+        desc="Describe a goal in a few words. Courses are ranked by skill match, rating and level, in your browser."
       />
 
-      <form className="card recommend-form" onSubmit={onSubmit} key={`${goal}|${level}`}>
-        <div className="recommend-fields">
-          <div className="field recommend-goal">
-            <label htmlFor={`${uid}-goal`}>Your learning goal</label>
+      <form className="pg-rec-form" onSubmit={onSubmit} key={`${goal}|${level}`}>
+        <div className="pg-rec-fields">
+          <div className="field pg-rec-goal">
+            <label className="field-label" htmlFor={`${uid}-goal`}>
+              Goal
+            </label>
             <input
               id={`${uid}-goal`}
               name="goal"
@@ -64,8 +65,10 @@ export default function Recommend() {
               required
             />
           </div>
-          <div className="field recommend-level">
-            <label htmlFor={`${uid}-level`}>Level (optional)</label>
+          <div className="field pg-rec-level">
+            <label className="field-label" htmlFor={`${uid}-level`}>
+              Level
+            </label>
             <select id={`${uid}-level`} name="level" className="select" defaultValue={level}>
               <option value="">Any level</option>
               {LEVEL_OPTIONS.map((l) => (
@@ -75,92 +78,78 @@ export default function Recommend() {
               ))}
             </select>
           </div>
-          <button type="submit" className="btn btn-primary recommend-submit">
-            <i className="fa-solid fa-wand-magic-sparkles" aria-hidden="true" /> Recommend
+          <button type="submit" className="btn btn-primary pg-rec-submit">
+            Recommend
           </button>
         </div>
-        <div className="recommend-examples">
+        <div className="pg-rec-examples">
           <span className="field-hint" id={`${uid}-ex`}>
-            Try:
+            Try
           </span>
-          <ul className="chip-list" aria-labelledby={`${uid}-ex`}>
+          <ul className="pg-tags" aria-labelledby={`${uid}-ex`}>
             {EXAMPLES.map((ex) => (
               <li key={ex}>
-                <SkillChip onClick={() => run(ex)} active={goal === ex}>
+                <button
+                  type="button"
+                  className={`tag pg-tag-btn ${goal === ex ? 'is-active' : ''}`}
+                  aria-pressed={goal === ex}
+                  onClick={() => run(ex)}
+                >
                   {ex}
-                </SkillChip>
+                </button>
               </li>
             ))}
           </ul>
         </div>
       </form>
 
-      <section aria-live="polite" aria-label="Recommendations">
+      <section className="pg-section" aria-live="polite" aria-label="Recommendations">
         {goal && results.length === 0 && (
-          <EmptyState
-            icon="fa-face-meh"
-            title="No matching courses yet"
-            actions={
-              <Link className="btn btn-outline" to={`/search?q=${encodeURIComponent(goal)}`}>
-                Try a plain search instead
-              </Link>
-            }
+          <Empty
+            icon={SearchX}
+            title="No matching courses"
+            hint={`Nothing matched “${goal}”. Try other words, a broader topic, or any level.`}
           >
-            <p>We could not match “{goal}” to any course. Try different words, a broader topic, or remove the level.</p>
-          </EmptyState>
+            <Link className="btn" to={`/search?q=${encodeURIComponent(goal)}`}>
+              Search instead
+            </Link>
+          </Empty>
         )}
 
         {results.length > 0 && (
           <>
-            <h2 className="results-heading">
-              Top {results.length} {results.length === 1 ? 'match' : 'matches'} for “{goal}”
-              {level && <span className="muted"> · {level}</span>}
-            </h2>
-            <ol className="rec-list">
-              {results.map((r, i) => {
+            <div className="pg-section-head">
+              <h2 className="section-label">
+                Matches for “{goal}”{level && ` · ${level}`} <span className="pg-count">· {results.length}</span>
+              </h2>
+            </div>
+            <CourseList
+              courses={results.map((r) => r.course).filter(Boolean)}
+              label={`Recommendations for ${goal}`}
+              extra={(course) => {
+                const r = byId.get(course.id)
+                if (!r) return null
                 const pct = Math.round(Math.max(0, Math.min(1, Number(r.score) || 0)) * 100)
                 return (
-                  <li key={r.course?.id || i} className="rec-item">
-                    <div className="rec-score">
-                      <div className="rec-score-head">
-                        <span className="rec-rank">#{i + 1}</span>
-                        <span className="rec-pct">{pct}% match</span>
-                      </div>
-                      <div
-                        className="score-bar"
-                        role="meter"
-                        aria-valuemin={0}
-                        aria-valuemax={100}
-                        aria-valuenow={pct}
-                        aria-label={`Match score for ${r.course?.title}`}
-                      >
-                        <span style={{ width: `${pct}%` }} />
-                      </div>
-                      {r.reason && <p className="rec-reason">{r.reason}</p>}
-                      {r.matchedSkills?.length > 0 && (
-                        <ul className="chip-list" aria-label="Matched skills">
-                          {r.matchedSkills.map((s) => (
-                            <li key={s}>
-                              <SkillChip variant="match">
-                                <i className="fa-solid fa-check" aria-hidden="true" /> {s}
-                              </SkillChip>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                    <CourseCard course={r.course} />
-                  </li>
+                  <span className="pg-rec-extra">
+                    <span className="pg-rec-score">
+                      <Meter percent={pct} label={`Match score for ${course.title}`} />
+                      <span className="pg-mono">{pct}%</span>
+                    </span>
+                    {r.reason && <span className="pg-rec-reason">{r.reason}</span>}
+                  </span>
                 )
-              })}
-            </ol>
+              }}
+            />
           </>
         )}
 
         {!goal && (
-          <EmptyState icon="fa-lightbulb" title="Tell us your goal">
-            <p>Pick an example above or type your own. Recommendations are computed in your browser from the course list.</p>
-          </EmptyState>
+          <Empty
+            icon={Lightbulb}
+            title="Start with a goal"
+            hint="Type one above or pick an example. Nothing leaves your browser."
+          />
         )}
       </section>
     </div>

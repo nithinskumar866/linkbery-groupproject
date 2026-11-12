@@ -1,5 +1,6 @@
-// Light/dark theme, persisted in localStorage under "linkbery.theme".
-// index.html applies the saved value before first paint.
+// Dark/light theme, persisted in localStorage under "linkbery.theme".
+// Dark is the default when nothing is saved. index.html applies the saved
+// value before first paint.
 export const THEME_KEY = 'linkbery.theme'
 
 export function getInitialTheme() {
@@ -11,7 +12,7 @@ export function getInitialTheme() {
   } catch {
     // storage unavailable
   }
-  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  return 'dark'
 }
 
 export function applyTheme(theme) {

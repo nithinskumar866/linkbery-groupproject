@@ -3,12 +3,13 @@ import { getCourseById } from '../lib/courses.js'
 import { getPathById, getPathProgress } from '../lib/paths.js'
 import { useAuth } from '../hooks/useAuth.js'
 import { useProgress } from '../hooks/useProgress.js'
-import CourseMini from '../components/CourseMini.jsx'
-import PageHeader from '../components/PageHeader.jsx'
-import SkillChip from '../components/SkillChip.jsx'
-import { ProgressBar, StatusControl } from '../components/ProgressStatus.jsx'
+import CourseCard from '../components/CourseCard.jsx'
+import { StatusControl } from '../components/ProgressStatus.jsx'
 import { categoryName, usePageTitle } from '../components/utils.js'
 import NotFound from './NotFound.jsx'
+import { Meter, PageHead } from './parts.jsx'
+
+const pad = (n) => String(n).padStart(2, '0')
 
 export default function PathDetail() {
   const { id } = useParams()
@@ -22,62 +23,50 @@ export default function PathDetail() {
   }
 
   const steps = path.steps || []
+  const optional = steps.filter((s) => s.optional).length
   const prog = user ? getPathProgress(path.id, progress) : null
+  const meta = [
+    path.level,
+    `${steps.length} ${steps.length === 1 ? 'step' : 'steps'}${optional ? ` (${optional} optional)` : ''}`,
+    ...(path.categories || []).map(categoryName),
+  ].filter(Boolean)
 
   return (
-    <div className="path-page">
-      <PageHeader
+    <div className="pg-path">
+      <PageHead
         title={path.title}
-        icon={path.icon || 'fa-route'}
-        subtitle={path.description}
-        breadcrumbs={[{ label: 'Learning paths', to: '/paths' }, { label: path.title }]}
+        desc={path.description}
+        crumbs={[{ label: 'Learning paths', to: '/paths' }, { label: path.title }]}
       />
 
-      <section className="card path-overview" aria-label="Path overview">
-        <div className="path-overview-info">
+      <div className="pg-path-summary">
+        <dl className="pg-path-facts">
           {path.goal && (
-            <p className="path-goal">
-              <i className="fa-solid fa-bullseye" aria-hidden="true" /> <strong>Goal:</strong> {path.goal}
-            </p>
+            <div>
+              <dt>Goal</dt>
+              <dd>{path.goal}</dd>
+            </div>
           )}
-          <ul className="chip-list">
-            {path.level && (
-              <li>
-                <span className="tag">
-                  <i className="fa-solid fa-signal" aria-hidden="true" /> {path.level}
-                </span>
-              </li>
-            )}
-            <li>
-              <span className="tag">
-                <i className="fa-solid fa-list-ol" aria-hidden="true" /> {steps.length}{' '}
-                {steps.length === 1 ? 'step' : 'steps'}
-              </span>
-            </li>
-            {(path.categories || []).map((c) => (
-              <li key={c}>
-                <SkillChip to={`/category/${c}`} variant="outline">
-                  {categoryName(c)}
-                </SkillChip>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="path-overview-progress">
+          <div>
+            <dt>Scope</dt>
+            <dd className="pg-mono">{meta.join(' · ')}</dd>
+          </div>
+        </dl>
+        <div className="pg-path-progress">
           {prog ? (
             <>
-              <div className="path-progress-head">
-                <strong>Your progress</strong>
-                <span>{prog.percent}%</span>
+              <div className="pg-path-progress-head">
+                <span className="section-label">Your progress</span>
+                <span className="pg-mono">{prog.percent}%</span>
               </div>
-              <ProgressBar percent={prog.percent} label={`${path.title} progress`} />
-              <p className="muted path-progress-text">
-                {prog.completed} of {prog.total} required {prog.total === 1 ? 'step' : 'steps'} completed
+              <Meter percent={prog.percent} label={`${path.title} progress`} />
+              <p className="field-hint">
+                {prog.completed} of {prog.total} required {prog.total === 1 ? 'step' : 'steps'} done
                 {prog.inProgress > 0 && `, ${prog.inProgress} in progress`}
               </p>
             </>
           ) : (
-            <p className="muted">
+            <p className="pg-dim">
               <Link to="/login" state={{ from: `/paths/${path.id}` }}>
                 Log in
               </Link>{' '}
@@ -85,29 +74,35 @@ export default function PathDetail() {
             </p>
           )}
         </div>
-      </section>
+      </div>
 
-      <ol className="timeline" aria-label="Steps">
+      <ol className="pg-timeline" aria-label="Steps">
         {steps.map((step, i) => {
           const course = getCourseById(step.courseId)
           const status = user ? getStatus(step.courseId) : null
           return (
-            <li key={`${step.courseId}-${i}`} className={`timeline-step status-${status || 'none'}`}>
-              <span className="timeline-marker" aria-hidden="true">
-                {status === 'completed' ? <i className="fa-solid fa-check" /> : i + 1}
-              </span>
-              <div className="timeline-body card">
-                <div className="timeline-head">
-                  <h2 className="timeline-title">
+            <li key={`${step.courseId}-${i}`} className={`pg-step pg-step-${status || 'none'}`}>
+              <div className="pg-step-rail" aria-hidden="true">
+                <span className="pg-step-num">{pad(i + 1)}</span>
+                <span className="pg-step-dot" />
+              </div>
+              <div className="pg-step-body">
+                <div className="pg-step-head">
+                  <h2 className="pg-step-title">
                     <span className="visually-hidden">Step {i + 1}: </span>
                     {step.title}
                   </h2>
-                  {step.optional && <span className="badge badge-unknown">Optional</span>}
+                  {step.optional && <span className="badge">Optional</span>}
                 </div>
-                {step.note && <p className="timeline-note">{step.note}</p>}
-                <CourseMini course={course}>
-                  {course && <StatusControl courseId={course.id} courseTitle={course.title} variant="compact" />}
-                </CourseMini>
+                {step.note && <p className="pg-step-note">{step.note}</p>}
+                {course ? (
+                  <div className="pg-step-course">
+                    <CourseCard course={course} />
+                    <StatusControl courseId={course.id} courseTitle={course.title} variant="compact" />
+                  </div>
+                ) : (
+                  <p className="pg-dim">This course is no longer listed.</p>
+                )}
               </div>
             </li>
           )

@@ -1,21 +1,27 @@
 import { useId, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getCourseById } from '../lib/courses.js'
-import { getAllPaths, getPathProgress } from '../lib/paths.js'
+import { getAllPaths } from '../lib/paths.js'
 import { STATUSES } from '../lib/progress.js'
 import { useProgress } from '../hooks/useProgress.js'
-import CourseGrid from './CourseGrid.jsx'
+import CourseList from './CourseList.jsx'
 import EmptyState from './EmptyState.jsx'
-import { ProgressBar } from './ProgressStatus.jsx'
+import PathCard from './PathCard.jsx'
 import { STATUS_META } from './statusMeta.js'
 
 const EMPTY_TEXT = {
-  planning: 'Mark a course as “Planning” on its page to line it up here.',
-  'in-progress': 'Courses you are currently taking will show up here.',
-  completed: 'Finished courses will show up here.',
+  planning: 'Set a course to “Planning” to line it up here.',
+  'in-progress': 'Courses you are taking show up here.',
+  completed: 'Finished courses show up here.',
 }
 
-/** Profile section: courses by progress status (tabs) + progress of started learning paths. */
+const EMPTY_TITLE = {
+  planning: 'Nothing planned yet',
+  'in-progress': 'Nothing in progress',
+  completed: 'Nothing completed yet',
+}
+
+/** Profile section: courses by progress status (tabs with counts) and started learning paths. */
 export default function MyLearning() {
   const uid = useId()
   const { progress } = useProgress()
@@ -40,9 +46,7 @@ export default function MyLearning() {
     ]),
   )
 
-  const startedPaths = getAllPaths()
-    .filter((p) => p.steps.some((st) => progress?.[st.courseId]?.status))
-    .map((p) => ({ path: p, prog: getPathProgress(p.id, progress) }))
+  const startedPaths = getAllPaths().filter((p) => p.steps.some((st) => progress?.[st.courseId]?.status))
 
   const onKeyDown = (e) => {
     const i = STATUSES.indexOf(tab)
@@ -59,12 +63,14 @@ export default function MyLearning() {
   }
 
   return (
-    <section className="home-section my-learning" aria-labelledby={`${uid}-h`}>
+    <section className="my-learning" aria-labelledby={`${uid}-h`}>
       <div className="section-head">
-        <h2 id={`${uid}-h`}>
-          <i className="fa-solid fa-person-chalkboard" aria-hidden="true" /> My learning
+        <h2 id={`${uid}-h`} className="section-title">
+          My learning
         </h2>
-        <Link to="/paths">Learning paths</Link>
+        <Link to="/paths" className="section-link">
+          Learning paths
+        </Link>
       </div>
 
       <div className="tabs" role="tablist" aria-label="Courses by progress" onKeyDown={onKeyDown}>
@@ -85,22 +91,22 @@ export default function MyLearning() {
               className={`tab ${selected ? 'is-active' : ''}`}
               onClick={() => setTab(s)}
             >
-              <i className={STATUS_META[s]?.icon} aria-hidden="true" /> {STATUS_META[s]?.label || s}
+              {STATUS_META[s]?.label || s}
               <span className="tab-count">{byStatus[s].length}</span>
             </button>
           )
         })}
       </div>
       <div role="tabpanel" id={`${uid}-panel`} aria-labelledby={`${uid}-tab-${tab}`} className="tab-panel">
-        <CourseGrid
+        <CourseList
           courses={byStatus[tab]}
           label={STATUS_META[tab]?.label}
           empty={
             <EmptyState
-              icon={STATUS_META[tab]?.icon.replace(/^fa-(solid|regular) /, '') || 'fa-book'}
-              title={`No courses ${tab === 'planning' ? 'planned' : tab === 'completed' ? 'completed' : 'in progress'} yet`}
+              icon={STATUS_META[tab]?.icon}
+              title={EMPTY_TITLE[tab]}
               actions={
-                <Link className="btn btn-outline" to="/courses">
+                <Link className="btn btn-sm" to="/courses">
                   Browse courses
                 </Link>
               }
@@ -111,29 +117,16 @@ export default function MyLearning() {
         />
       </div>
 
-      <h3 className="my-paths-h">Your learning paths</h3>
+      <h3 className="section-label my-paths-label">Your learning paths · {startedPaths.length}</h3>
       {startedPaths.length === 0 ? (
-        <p className="muted">
-          You have not started a learning path yet. <Link to="/paths">Pick one</Link> and set a status on its first
-          course.
+        <p className="muted my-paths-empty">
+          No path started yet. <Link to="/paths">Pick one</Link> and set a status on its first course.
         </p>
       ) : (
-        <ul className="my-paths">
-          {startedPaths.map(({ path, prog }) => (
-            <li key={path.id} className="card my-path">
-              <span className="path-icon path-icon-sm" aria-hidden="true">
-                <i className={`fa-solid ${path.icon || 'fa-route'}`} />
-              </span>
-              <div className="my-path-body">
-                <Link to={`/paths/${encodeURIComponent(path.id)}`} className="my-path-title">
-                  {path.title}
-                </Link>
-                <ProgressBar percent={prog.percent} label={`${path.title} progress`} small />
-                <span className="muted my-path-text">
-                  {prog.completed}/{prog.total} done ({prog.percent}%)
-                  {prog.inProgress > 0 && ` · ${prog.inProgress} in progress`}
-                </span>
-              </div>
+        <ul className="path-list">
+          {startedPaths.map((p) => (
+            <li key={p.id}>
+              <PathCard path={p} variant="row" />
             </li>
           ))}
         </ul>

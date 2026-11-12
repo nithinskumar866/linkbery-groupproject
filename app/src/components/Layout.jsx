@@ -1,27 +1,16 @@
 import { useEffect, useState } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
+import { Link, Outlet, useLocation } from 'react-router-dom'
 import Header from './Header.jsx'
-import Sidebar from './Sidebar.jsx'
+import MobileNav from './MobileNav.jsx'
+import CommandPalette from './CommandPalette.jsx'
 import CompareTray from './CompareTray.jsx'
 import Toaster from './Toaster.jsx'
 import { useCompare } from '../hooks/useCompare.js'
 import { applyTheme, getInitialTheme } from './theme.js'
 
-const MOBILE_QUERY = '(max-width: 900px)'
-const SIDEBAR_KEY = 'linkbery.sidebar'
-
-function initialCollapsed() {
-  try {
-    return localStorage.getItem(SIDEBAR_KEY) === 'collapsed'
-  } catch {
-    return false
-  }
-}
-
 export default function Layout() {
   const [theme, setTheme] = useState(getInitialTheme)
-  const [collapsed, setCollapsed] = useState(initialCollapsed)
-  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const { pathname } = useLocation()
   const { compareIds } = useCompare()
   const showTray = compareIds.length > 0 && pathname !== '/compare'
@@ -30,61 +19,39 @@ export default function Layout() {
     applyTheme(theme)
   }, [theme])
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(SIDEBAR_KEY, collapsed ? 'collapsed' : 'expanded')
-    } catch {
-      // ignore
-    }
-  }, [collapsed])
-
   // Scroll to top on page change.
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [pathname])
 
-  // Escape closes the mobile drawer.
-  useEffect(() => {
-    if (!drawerOpen) return undefined
-    const onKey = (e) => e.key === 'Escape' && setDrawerOpen(false)
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [drawerOpen])
-
-  const isMobile = () => window.matchMedia(MOBILE_QUERY).matches
-  const toggleSidebar = () => {
-    if (isMobile()) setDrawerOpen((o) => !o)
-    else setCollapsed((c) => !c)
-  }
-  const closeDrawer = () => setDrawerOpen(false)
-
   return (
-    <div
-      className={`app-shell ${collapsed ? 'sidebar-collapsed' : ''} ${drawerOpen ? 'drawer-open' : ''} ${showTray ? 'has-tray' : ''}`}
-    >
+    <div className={`app ${showTray ? 'has-tray' : ''}`}>
       <a href="#main-content" className="skip-link">
         Skip to content
       </a>
       <Header
-        onToggleSidebar={toggleSidebar}
-        sidebarExpanded={drawerOpen || !collapsed}
         theme={theme}
         onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+        menuOpen={menuOpen}
+        onOpenMenu={() => setMenuOpen(true)}
       />
-      <Sidebar onNavigate={closeDrawer} collapsed={collapsed} drawerOpen={drawerOpen} />
-      {drawerOpen && (
-        <button type="button" className="drawer-backdrop" aria-label="Close menu" onClick={closeDrawer} />
-      )}
-      <div className="app-content">
-        <main id="main-content" className="main" tabIndex={-1}>
-          <Outlet />
-        </main>
-        <footer className="site-footer">
-          <span>© 2026 Linkbery</span>
-          <span className="muted">Course data is collected from public listings; check the provider for current prices.</span>
-        </footer>
-      </div>
+      <MobileNav open={menuOpen} onClose={() => setMenuOpen(false)} />
+      <main id="main-content" className="main container" tabIndex={-1}>
+        <Outlet />
+      </main>
+      <footer className="footer">
+        <div className="container footer-inner">
+          <span className="footer-brand">© 2026 linkbery</span>
+          <span className="footer-note">Course data comes from public listings. Check the provider for current prices.</span>
+          <nav className="footer-links" aria-label="Footer">
+            <Link to="/about">About</Link>
+            <Link to="/contact">Contact</Link>
+            <Link to="/insights">Insights</Link>
+          </nav>
+        </div>
+      </footer>
       {showTray && <CompareTray />}
+      <CommandPalette />
       <Toaster />
     </div>
   )

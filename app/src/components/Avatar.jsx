@@ -1,19 +1,18 @@
-import { initials, hueFor } from './utils.js'
+import { User } from './icons.js'
+import { initials } from './utils.js'
 
-/** User avatar image, or initials when there is none. */
+/** User avatar image, or initials on --surface-active when there is none. */
 export default function Avatar({ user, size = 40, className = '' }) {
-  const style = { width: size, height: size, fontSize: Math.round(size * 0.4) }
+  const style = { width: size, height: size, fontSize: Math.max(10, Math.round(size * 0.4)) }
+  const shape = size >= 48 ? 'avatar-lg' : ''
   if (user?.avatar) {
-    return <img className={`avatar ${className}`} src={user.avatar} alt="" style={style} width={size} height={size} />
+    return (
+      <img className={`avatar ${shape} ${className}`} src={user.avatar} alt="" style={style} width={size} height={size} />
+    )
   }
-  const name = user?.name || 'Guest'
   return (
-    <span
-      className={`avatar avatar-initials ${className}`}
-      style={{ ...style, '--hue': user ? hueFor(name) : 30 }}
-      aria-hidden="true"
-    >
-      {user ? initials(name) : <i className="fa-solid fa-user" />}
+    <span className={`avatar avatar-initials ${shape} ${className}`} style={style} aria-hidden="true">
+      {user ? initials(user.name || user.email) : <User size={Math.round(size * 0.55)} />}
     </span>
   )
 }

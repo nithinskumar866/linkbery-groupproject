@@ -1,19 +1,6 @@
-import CourseCard from './CourseCard.jsx'
-import EmptyState from './EmptyState.jsx'
+import CourseList from './CourseList.jsx'
 
-/** Responsive grid of CourseCards. `empty` is rendered when there are no courses. */
+/** Grid of compact CourseCards. Kept for existing callers; prefer <CourseList />. */
 export default function CourseGrid({ courses, empty, label = 'Courses' }) {
-  const list = (courses || []).filter(Boolean)
-  if (list.length === 0) {
-    return empty ?? <EmptyState title="No courses to show" />
-  }
-  return (
-    <ul className="course-grid" aria-label={label}>
-      {list.map((c) => (
-        <li key={c.id}>
-          <CourseCard course={c} />
-        </li>
-      ))}
-    </ul>
-  )
+  return <CourseList courses={courses} empty={empty} label={label} variant="cards" />
 }

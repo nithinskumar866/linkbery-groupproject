@@ -1,17 +1,18 @@
 import { useState } from 'react'
-import { findPlatform, initials, hueFor } from './utils.js'
+import { findPlatform, initials } from './utils.js'
 
-/** Platform logo image, falling back to coloured initials (also if the image fails to load). */
-export default function PlatformLogo({ name, size = 36, decorative = false }) {
+/** Platform logo image, falling back to mono initials (also if the image fails to load). */
+export default function PlatformLogo({ name, size = 20, decorative = false }) {
   const platform = findPlatform(name)
   const [failed, setFailed] = useState(false)
   const label = decorative ? '' : `${name || 'Unknown platform'} logo`
   const style = { width: size, height: size }
+  const radius = size >= 40 ? 'platform-logo-lg' : ''
 
   if (platform?.logo && !failed) {
     return (
       <img
-        className="platform-logo"
+        className={`platform-logo ${radius}`}
         src={platform.logo}
         alt={label}
         width={size}
@@ -24,8 +25,8 @@ export default function PlatformLogo({ name, size = 36, decorative = false }) {
   }
   return (
     <span
-      className="platform-logo platform-logo-initials"
-      style={{ ...style, fontSize: Math.round(size * 0.38), '--hue': hueFor(name) }}
+      className={`platform-logo platform-logo-initials ${radius}`}
+      style={{ ...style, fontSize: Math.max(9, Math.round(size * 0.4)) }}
       role={decorative ? undefined : 'img'}
       aria-label={decorative ? undefined : label}
       aria-hidden={decorative ? 'true' : undefined}

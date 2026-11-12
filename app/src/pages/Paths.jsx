@@ -1,10 +1,9 @@
 import { Link } from 'react-router-dom'
+import { Route } from 'lucide-react'
 import { getAllPaths } from '../lib/paths.js'
 import { useAuth } from '../hooks/useAuth.js'
-import EmptyState from '../components/EmptyState.jsx'
-import PageHeader from '../components/PageHeader.jsx'
-import PathCard from '../components/PathCard.jsx'
 import { usePageTitle } from '../components/utils.js'
+import { Empty, Note, PageHead, PathRow, SectionHead } from './parts.jsx'
 
 export default function Paths() {
   usePageTitle('Learning paths')
@@ -12,33 +11,32 @@ export default function Paths() {
   const paths = getAllPaths()
 
   return (
-    <div className="paths-page">
-      <PageHeader
+    <div className="pg-paths">
+      <PageHead
         title="Learning paths"
-        icon="fa-route"
-        subtitle="Step-by-step routes through courses from different platforms, picked to take you towards a goal."
+        desc="Ordered courses from different platforms that lead to one goal, such as a first data analyst job."
       />
       {!user && (
-        <p className="alert alert-info">
-          <i className="fa-solid fa-circle-info" aria-hidden="true" />
-          <span>
-            <Link to="/login" state={{ from: '/paths' }}>
-              Log in
-            </Link>{' '}
-            to track your progress through each path.
-          </span>
-        </p>
+        <Note>
+          <Link to="/login" state={{ from: '/paths' }}>
+            Log in
+          </Link>{' '}
+          to track your progress through a path.
+        </Note>
       )}
       {paths.length === 0 ? (
-        <EmptyState icon="fa-route" title="No learning paths yet" />
+        <Empty icon={Route} title="No learning paths yet" />
       ) : (
-        <ul className="path-grid" aria-label="Learning paths">
-          {paths.map((p) => (
-            <li key={p.id}>
-              <PathCard path={p} />
-            </li>
-          ))}
-        </ul>
+        <section className="pg-section pg-section-first" aria-labelledby="h-all-paths">
+          <SectionHead id="h-all-paths" label="Paths" count={paths.length} />
+          <ul className="pg-rows" aria-label="Learning paths">
+            {paths.map((p) => (
+              <li key={p.id}>
+                <PathRow path={p} />
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
     </div>
   )

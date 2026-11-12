@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom'
 
 /**
- * Page title block with optional icon, subtitle, breadcrumbs ([{ label, to }]) and actions.
+ * Page title block: optional breadcrumbs ([{ label, to }]), title, subtitle and
+ * actions (children) on the right. `icon` is accepted for compatibility but not
+ * drawn: typography carries the hierarchy.
  */
-export default function PageHeader({ title, subtitle, icon, breadcrumbs, children }) {
+export default function PageHeader({ title, subtitle, breadcrumbs, children }) {
   return (
-    <header className="page-header">
+    <header className="page-head">
       {breadcrumbs?.length > 0 && (
         <nav className="breadcrumbs" aria-label="Breadcrumb">
           <ol>
@@ -17,15 +19,12 @@ export default function PageHeader({ title, subtitle, icon, breadcrumbs, childre
           </ol>
         </nav>
       )}
-      <div className="page-header-row">
-        <div className="page-header-text">
-          <h1>
-            {icon && <i className={`fa-solid ${icon} page-header-icon`} aria-hidden="true" />}
-            {title}
-          </h1>
-          {subtitle && <p className="page-subtitle">{subtitle}</p>}
+      <div className="page-head-row">
+        <div className="page-head-text">
+          <h1 className="page-title">{title}</h1>
+          {subtitle && <p className="page-desc">{subtitle}</p>}
         </div>
-        {children && <div className="page-header-actions">{children}</div>}
+        {children && <div className="page-head-actions">{children}</div>}
       </div>
     </header>
   )

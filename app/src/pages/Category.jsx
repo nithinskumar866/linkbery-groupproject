@@ -16,14 +16,10 @@ export default function Category() {
   return (
     <CourseListView
       key={category.slug}
-      title={`${category.name} courses`}
-      icon={category.icon}
+      title={category.name}
       fixedCategory={category.slug}
-      subtitle={category.group === 'technical' ? 'Technical category' : 'Non-technical category'}
-      breadcrumbs={[
-        { label: 'Courses', to: '/courses' },
-        { label: category.name },
-      ]}
+      subtitle={category.group === 'technical' ? 'Technical category.' : 'Non-technical category.'}
+      breadcrumbs={[{ label: 'Courses', to: '/courses' }, { label: category.name }]}
     />
   )
 }

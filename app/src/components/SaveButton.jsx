@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth.js'
 import { useSaved } from '../hooks/useSaved.js'
+import { Bookmark, BookmarkCheck } from './icons.js'
 
 /** Bookmark toggle. Guests are sent to /login with a message and brought back afterwards. */
 export default function SaveButton({ courseId, courseTitle, variant = 'icon' }) {
@@ -13,7 +14,8 @@ export default function SaveButton({ courseId, courseTitle, variant = 'icon' }) 
   const goLogin = (message) =>
     navigate('/login', { state: { from: location, message: message || 'Log in to save courses to your profile.' } })
 
-  const onClick = () => {
+  const onClick = (e) => {
+    e.stopPropagation()
     if (!user) {
       goLogin()
       return
@@ -25,33 +27,33 @@ export default function SaveButton({ courseId, courseTitle, variant = 'icon' }) 
     }
   }
 
-  const label = saved ? 'Remove from saved' : 'Save course'
+  const label = saved ? 'Remove from saved' : 'Save'
   const fullLabel = courseTitle ? `${label}: ${courseTitle}` : label
-  const icon = saved ? 'fa-solid fa-bookmark' : 'fa-regular fa-bookmark'
+  const Icon = saved ? BookmarkCheck : Bookmark
 
   if (variant === 'icon') {
     return (
       <button
         type="button"
-        className={`icon-btn save-btn ${saved ? 'is-saved' : ''}`}
+        className={`btn btn-ghost btn-icon btn-sm action-btn save-btn ${saved ? 'is-active' : ''}`}
         onClick={onClick}
         aria-pressed={saved}
         aria-label={fullLabel}
-        title={label}
+        data-tip={saved ? 'Saved' : 'Save'}
       >
-        <i className={icon} aria-hidden="true" />
+        <Icon />
       </button>
     )
   }
   return (
     <button
       type="button"
-      className={`btn ${saved ? 'btn-outline is-saved' : 'btn-outline'} save-btn-full`}
+      className={`btn save-btn-full ${saved ? 'is-active' : ''}`}
       onClick={onClick}
       aria-pressed={saved}
     >
-      <i className={icon} aria-hidden="true" />
-      {saved ? 'Saved' : 'Save course'}
+      <Icon />
+      {saved ? 'Saved' : 'Save'}
     </button>
   )
 }
