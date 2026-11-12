@@ -106,7 +106,7 @@ export default function MyLearning() {
               icon={STATUS_META[tab]?.icon}
               title={EMPTY_TITLE[tab]}
               actions={
-                <Link className="btn btn-sm" to="/courses">
+                <Link className="btn btn-secondary btn-sm" to="/courses">
                   Browse courses
                 </Link>
               }
@@ -117,7 +117,9 @@ export default function MyLearning() {
         />
       </div>
 
-      <h3 className="section-label my-paths-label">Your learning paths · {startedPaths.length}</h3>
+      <h3 className="my-paths-title">
+        Your learning paths <span className="tab-count">{startedPaths.length}</span>
+      </h3>
       {startedPaths.length === 0 ? (
         <p className="muted my-paths-empty">
           No path started yet. <Link to="/paths">Pick one</Link> and set a status on its first course.

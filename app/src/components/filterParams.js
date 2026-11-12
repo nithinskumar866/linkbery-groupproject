@@ -2,6 +2,15 @@
 // Multi-value filters use repeated params: ?level=Beginner&level=Advanced
 import { SORTS } from './utils.js'
 
+/** Results per page on the course lists. */
+export const PAGE_SIZE = 12
+
+/** 1-based page from ?page= (invalid or missing -> 1). Not part of the filters. */
+export function readPage(sp) {
+  const n = Number.parseInt(sp.get('page') || '', 10)
+  return Number.isFinite(n) && n > 0 ? n : 1
+}
+
 export const EMPTY_FILTERS = {
   q: '',
   categories: [],

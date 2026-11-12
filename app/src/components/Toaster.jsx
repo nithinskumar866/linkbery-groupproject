@@ -3,6 +3,7 @@ import { dismissToast, useToasts } from './toast.js'
 
 const ICONS = { success: CircleCheck, error: CircleAlert, info: Info }
 
+/** Toast stack: white cards with a coloured icon on the left. */
 export default function Toaster() {
   const toasts = useToasts()
   return (
@@ -14,7 +15,7 @@ export default function Toaster() {
             <Icon className="toast-icon" aria-hidden="true" />
             <span className="toast-text">{t.text}</span>
             <button type="button" className="toast-close" onClick={() => dismissToast(t.id)} aria-label="Dismiss">
-              <X size={14} />
+              <X size={16} />
             </button>
           </div>
         )

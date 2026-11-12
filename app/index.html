@@ -1,27 +1,28 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="dark light" />
-    <meta name="description" content="Linkbery collects online courses from Coursera, Udemy, edX, Guvi, Simplilearn, YouTube and more so you can search, compare and save them in one place." />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="description" content="Linkbery lists online courses from Coursera, Udemy, edX, YouTube, Khan Academy and more with the same details side by side, so you can search, compare and save them in one place." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" />
     <script>
-      // Apply the saved theme before first paint. Dark unless the user chose light.
+      // Apply the saved theme before first paint. Light unless the user chose dark.
       (function () {
-        var t = 'dark';
+        var t = 'light';
         try {
-          if (localStorage.getItem('linkbery.theme') === 'light') t = 'light';
+          if (localStorage.getItem('linkbery.theme') === 'dark') t = 'dark';
         } catch (e) {
-          // storage unavailable: keep dark
+          // storage unavailable: keep light
         }
         document.documentElement.dataset.theme = t;
       })();
     </script>
-    <title>Linkbery - find the right course</title>
+    <title>Linkbery - find the right online course</title>
   </head>
   <body>
     <div id="root"></div>

@@ -1,24 +1,24 @@
-// Dark/light theme, persisted in localStorage under "linkbery.theme".
-// Dark is the default when nothing is saved. index.html applies the saved
-// value before first paint.
+// Light/dark theme, persisted in localStorage under "linkbery.theme".
+// Light is the default; dark only when the user picked it. index.html applies
+// the saved value before first paint.
 export const THEME_KEY = 'linkbery.theme'
 
 export function getInitialTheme() {
   const current = document.documentElement.dataset.theme
   if (current === 'dark' || current === 'light') return current
   try {
-    const saved = localStorage.getItem(THEME_KEY)
-    if (saved === 'dark' || saved === 'light') return saved
+    if (localStorage.getItem(THEME_KEY) === 'dark') return 'dark'
   } catch {
     // storage unavailable
   }
-  return 'dark'
+  return 'light'
 }
 
 export function applyTheme(theme) {
-  document.documentElement.dataset.theme = theme
+  const next = theme === 'dark' ? 'dark' : 'light'
+  document.documentElement.dataset.theme = next
   try {
-    localStorage.setItem(THEME_KEY, theme)
+    localStorage.setItem(THEME_KEY, next)
   } catch {
     // storage unavailable: theme still applies for this session
   }
