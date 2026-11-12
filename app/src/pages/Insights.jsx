@@ -1,21 +1,21 @@
 import { Link } from 'react-router-dom'
-import { ArrowUpRight, ChartColumn } from 'lucide-react'
+import { ChartColumn } from 'lucide-react'
 import { getAllSkills, getOverallStats, getPlatformInsights } from '../lib/courses.js'
+import PageBand from '../components/PageBand.jsx'
 import PlatformLogo from '../components/PlatformLogo.jsx'
 import { LEVELS, formatCount, formatNumber, formatRating, usePageTitle } from '../components/utils.js'
-import { Empty, PageHead } from './parts.jsx'
-import { ICON } from './iconProps.js'
+import { Empty, Wrap } from './parts.jsx'
 
-/** Thin horizontal CSS bars. rows: [{ key, label, value, display, to? }] */
+/** Horizontal CSS bars. rows: [{ key, label, value, display, to? }] */
 function Bars({ id, title, caption, rows, max }) {
   const top = max ?? Math.max(0, ...rows.map((r) => r.value || 0))
   return (
-    <figure className="pg-chart" aria-labelledby={id}>
+    <figure className="card pg-chart" aria-labelledby={id}>
       <figcaption>
-        <h2 id={id} className="section-label">
+        <h2 id={id} className="pg-h3">
           {title}
         </h2>
-        {caption && <p className="field-hint">{caption}</p>}
+        {caption && <p className="pg-chart-caption">{caption}</p>}
       </figcaption>
       {rows.length === 0 ? (
         <p className="pg-dim">No data yet.</p>
@@ -49,6 +49,7 @@ export default function Insights() {
   const stats = getOverallStats()
   const topSkills = getAllSkills().slice(0, 10)
   const avg = formatRating(stats?.avgRating)
+  const totalReviews = insights.reduce((n, p) => n + (p.totalReviews || 0), 0)
 
   const countRows = insights.map((p) => ({
     key: p.platform.name,
@@ -63,7 +64,7 @@ export default function Insights() {
       key: p.platform.name,
       label: p.platform.name,
       value: p.avgRating ?? 0,
-      display: p.avgRating != null ? formatRating(p.avgRating) : 'n/a',
+      display: p.avgRating != null ? formatRating(p.avgRating) : 'No ratings',
     }))
   const skillRows = topSkills.map((s) => ({
     key: s.name,
@@ -73,120 +74,109 @@ export default function Insights() {
     to: `/courses?skill=${encodeURIComponent(s.name)}`,
   }))
 
+  const tiles = [
+    ['Courses listed', formatNumber(stats?.courseCount)],
+    ['Platforms', formatNumber(stats?.platformCount)],
+    ['Skills covered', formatNumber(stats?.skillCount)],
+    ['Average rating', avg ? `${avg} / 5` : 'n/a'],
+    ['Reviews counted', totalReviews ? formatCount(totalReviews) : 'n/a'],
+  ]
+
   return (
     <div className="pg-insights">
-      <PageHead
-        title="Insights"
-        desc="How the listed platforms compare, computed from the course list. Ratings are the providers’ own."
+      <PageBand
+        crumbs={[{ label: 'Home', to: '/' }, { label: 'Platform insights' }]}
+        title="Platform insights"
+        desc="How the listed platforms compare, worked out from the course list. Ratings are the providers’ own."
       />
 
-      <dl className="pg-stats">
-        <div>
-          <dt>Courses</dt>
-          <dd>{formatNumber(stats?.courseCount)}</dd>
-        </div>
-        <div>
-          <dt>Platforms</dt>
-          <dd>{formatNumber(stats?.platformCount)}</dd>
-        </div>
-        <div>
-          <dt>Skills</dt>
-          <dd>{formatNumber(stats?.skillCount)}</dd>
-        </div>
-        <div>
-          <dt>Avg rating</dt>
-          <dd>{avg ?? 'n/a'}</dd>
-        </div>
-      </dl>
+      <Wrap className="pg-page-body">
+        <dl className="pg-tiles">
+          {tiles.map(([k, v]) => (
+            <div key={k} className="card pg-tile">
+              <dt>{k}</dt>
+              <dd>{v}</dd>
+            </div>
+          ))}
+        </dl>
 
-      {insights.length === 0 ? (
-        <Empty icon={ChartColumn} title="No platform data yet" />
-      ) : (
-        <>
-          <div className="pg-chart-grid">
-            <Bars id="h-count" title="Courses per platform" rows={countRows} />
-            <Bars id="h-rating" title="Average rating" caption="Out of 5." rows={ratingRows} max={5} />
-            <Bars id="h-skills" title="Most common skills" caption="Courses teaching each skill." rows={skillRows} />
-          </div>
+        {insights.length === 0 ? (
+          <Empty icon={ChartColumn} title="No platform data yet" />
+        ) : (
+          <>
+            <div className="pg-chart-grid">
+              <Bars id="ins-count" title="Courses per platform" caption="Number of listed courses." rows={countRows} />
+              <Bars id="ins-rating" title="Average rating" caption="Out of 5, for rated courses only." rows={ratingRows} max={5} />
+              <Bars id="ins-skills" title="Most common skills" caption="Courses teaching each skill." rows={skillRows} />
+            </div>
 
-          <section className="pg-section" aria-labelledby="h-platforms">
-            <div className="pg-section-head">
-              <h2 id="h-platforms" className="section-label">
-                Platforms <span className="pg-count">· {insights.length}</span>
+            <section className="pg-block" aria-labelledby="ins-platforms">
+              <h2 id="ins-platforms" className="pg-h3">
+                All platforms
               </h2>
-            </div>
-            <div className="pg-table-scroll" role="region" aria-labelledby="h-platforms" tabIndex={0}>
-              <table className="pg-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Platform</th>
-                    <th scope="col" className="pg-num">
-                      Courses
-                    </th>
-                    <th scope="col" className="pg-num">
-                      Rating
-                    </th>
-                    <th scope="col" className="pg-num">
-                      Reviews
-                    </th>
-                    <th scope="col">
-                      <abbr title="Beginner / Intermediate / Advanced / Mixed">Levels</abbr>
-                    </th>
-                    <th scope="col">Top skills</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {insights.map((p) => {
-                    const r = formatRating(p.avgRating)
-                    const levels = LEVELS.filter((l) => p.levels?.[l] > 0)
-                      .map((l) => `${LEVEL_ABBR[l]} ${p.levels[l]}`)
-                      .join(' · ')
-                    return (
-                      <tr key={p.platform.name}>
-                        <th scope="row">
-                          <span className="pg-plat">
-                            <PlatformLogo name={p.platform.name} size={20} decorative />
-                            <Link to={`/courses?platform=${encodeURIComponent(p.platform.name)}`}>
-                              {p.platform.name}
-                            </Link>
-                            {p.platform.url && (
-                              <a
-                                className="pg-plat-ext"
-                                href={p.platform.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                aria-label={`${p.platform.name} website (opens in a new tab)`}
-                              >
-                                <ArrowUpRight {...ICON} size={14} />
-                              </a>
-                            )}
-                          </span>
-                        </th>
-                        <td className="pg-num">{formatNumber(p.courseCount)}</td>
-                        <td className="pg-num">{r ?? '-'}</td>
-                        <td className="pg-num">{p.totalReviews ? formatCount(p.totalReviews) : '-'}</td>
-                        <td className="pg-mono pg-nowrap">{levels || '-'}</td>
-                        <td className="pg-skills-cell">
-                          {(p.topSkills || []).slice(0, 3).map((s, i) => (
-                            <span key={s.name}>
-                              {i > 0 && ', '}
-                              <Link
-                                to={`/courses?platform=${encodeURIComponent(p.platform.name)}&skill=${encodeURIComponent(s.name)}`}
-                              >
-                                {s.name}
-                              </Link>
+              <div className="pg-table-scroll" role="region" aria-labelledby="ins-platforms" tabIndex={0}>
+                <table className="pg-table">
+                  <thead>
+                    <tr>
+                      <th scope="col" className="pg-sticky-col">
+                        Platform
+                      </th>
+                      <th scope="col" className="pg-num">
+                        Courses
+                      </th>
+                      <th scope="col" className="pg-num">
+                        Avg rating
+                      </th>
+                      <th scope="col" className="pg-num">
+                        Reviews
+                      </th>
+                      <th scope="col">
+                        <abbr title="Beginner / Intermediate / Advanced / Mixed">Levels</abbr>
+                      </th>
+                      <th scope="col">Top skills</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {insights.map((p) => {
+                      const r = formatRating(p.avgRating)
+                      const levels = LEVELS.filter((l) => p.levels?.[l] > 0)
+                        .map((l) => `${LEVEL_ABBR[l]} ${p.levels[l]}`)
+                        .join(' · ')
+                      return (
+                        <tr key={p.platform.name}>
+                          <th scope="row" className="pg-sticky-col">
+                            <span className="pg-plat">
+                              <PlatformLogo name={p.platform.name} size={20} decorative />
+                              <Link to={`/courses?platform=${encodeURIComponent(p.platform.name)}`}>{p.platform.name}</Link>
                             </span>
-                          ))}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        </>
-      )}
+                          </th>
+                          <td className="pg-num">{formatNumber(p.courseCount)}</td>
+                          <td className="pg-num">{r ?? '–'}</td>
+                          <td className="pg-num">{p.totalReviews ? formatCount(p.totalReviews) : '–'}</td>
+                          <td className="pg-nowrap">{levels || '–'}</td>
+                          <td className="pg-skills-cell">
+                            {(p.topSkills || []).slice(0, 3).map((s, i) => (
+                              <span key={s.name}>
+                                {i > 0 && ', '}
+                                <Link
+                                  to={`/courses?platform=${encodeURIComponent(p.platform.name)}&skill=${encodeURIComponent(s.name)}`}
+                                >
+                                  {s.name}
+                                </Link>
+                              </span>
+                            ))}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <p className="pg-table-note">B, I, A, M: number of Beginner, Intermediate, Advanced and Mixed-level courses.</p>
+            </section>
+          </>
+        )}
+      </Wrap>
     </div>
   )
 }

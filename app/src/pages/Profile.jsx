@@ -1,8 +1,8 @@
 import { useId, useRef } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { Bookmark, CircleCheck, CircleDot, LogOut, Pencil, Route } from 'lucide-react'
+import { Bookmark, CalendarClock, CircleCheck, CirclePlay, LogOut, Pencil, Route } from 'lucide-react'
 import { getCourseById } from '../lib/courses.js'
-import { getAllPaths, getPathProgress } from '../lib/paths.js'
+import { getAllPaths } from '../lib/paths.js'
 import { STATUSES } from '../lib/progress.js'
 import { useAuth } from '../hooks/useAuth.js'
 import { useProgress } from '../hooks/useProgress.js'
@@ -11,7 +11,7 @@ import Avatar from '../components/Avatar.jsx'
 import CourseList from '../components/CourseList.jsx'
 import { STATUS_META } from '../components/statusMeta.js'
 import { formatDate, usePageTitle } from '../components/utils.js'
-import { Empty, PathRow } from './parts.jsx'
+import { Empty, PathTile, Wrap } from './parts.jsx'
 import { ICON } from './iconProps.js'
 
 const TABS = ['saved', ...STATUSES, 'paths']
@@ -19,11 +19,11 @@ const LABEL = { saved: 'Saved', paths: 'Paths' }
 const tabLabel = (t) => LABEL[t] || STATUS_META[t]?.label || t
 
 const EMPTY = {
-  saved: { icon: Bookmark, title: 'No saved courses', hint: 'Use the bookmark on any course to keep it here.' },
-  planning: { icon: CircleDot, title: 'Nothing planned', hint: 'Set a course to “Planning” on its page to line it up.' },
-  'in-progress': { icon: CircleDot, title: 'Nothing in progress', hint: 'Courses you are taking show up here.' },
+  saved: { icon: Bookmark, title: 'No saved courses', hint: 'Use Save on any course to keep it here.' },
+  planning: { icon: CalendarClock, title: 'Nothing planned', hint: 'Set a course to “Planning” on its page to line it up.' },
+  'in-progress': { icon: CirclePlay, title: 'Nothing in progress', hint: 'Courses you are taking show up here.' },
   completed: { icon: CircleCheck, title: 'Nothing completed yet', hint: 'Finished courses show up here.' },
-  paths: { icon: Route, title: 'No paths started', hint: 'Set a status on any course in a path to start tracking it.' },
+  paths: { icon: Route, title: 'No paths started', hint: 'Set a status on any course in a learning path to start tracking it.' },
 }
 
 export default function Profile() {
@@ -84,85 +84,100 @@ export default function Profile() {
   const empty = EMPTY[tab]
   const emptyNode = (
     <Empty icon={empty.icon} title={empty.title} hint={empty.hint}>
-      <Link className="btn btn-sm" to={tab === 'paths' ? '/paths' : '/courses'}>
-        {tab === 'paths' ? 'Browse paths' : 'Browse courses'}
+      <Link className="btn btn-secondary" to={tab === 'paths' ? '/paths' : '/courses'}>
+        {tab === 'paths' ? 'Browse learning paths' : 'Browse courses'}
       </Link>
     </Empty>
   )
 
   return (
     <div className="pg-profile">
-      <header className="pg-profile-head">
-        <Avatar user={user} size={48} />
-        <div className="pg-profile-id">
-          <h1 className="pg-profile-name">{user.name}</h1>
-          <p className="pg-profile-meta">
-            <span>{user.email}</span>
-            {since && (
-              <>
-                <span aria-hidden="true"> · </span>
-                <span>Member since {since}</span>
-              </>
-            )}
-          </p>
-        </div>
-        <div className="pg-head-actions">
-          <Link className="btn btn-sm" to="/profile/edit">
-            <Pencil {...ICON} /> Edit profile
-          </Link>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={onLogout}>
-            <LogOut {...ICON} /> Log out
-          </button>
-        </div>
-      </header>
+      <section className="pg-band pg-profile-band" aria-labelledby="profile-name">
+        <Wrap>
+          <nav className="pg-crumbs" aria-label="Breadcrumb">
+            <ol>
+              <li>
+                <Link to="/">Home</Link>
+              </li>
+              <li>
+                <span aria-current="page">Profile</span>
+              </li>
+            </ol>
+          </nav>
+          <div className="card pg-profile-card">
+            <Avatar user={user} size={72} />
+            <div className="pg-profile-id">
+              <h1 id="profile-name" className="pg-profile-name">
+                {user.name}
+              </h1>
+              <p className="pg-profile-meta">
+                <span>{user.email}</span>
+                {since && <span>Member since {since}</span>}
+              </p>
+            </div>
+            <div className="pg-profile-actions">
+              <Link className="btn btn-secondary" to="/profile/edit">
+                <Pencil {...ICON} /> Edit profile
+              </Link>
+              <button type="button" className="btn btn-secondary" onClick={onLogout}>
+                <LogOut {...ICON} /> Log out
+              </button>
+            </div>
+          </div>
+        </Wrap>
+      </section>
 
-      <div className="pg-tabs" role="tablist" aria-label="Your courses" onKeyDown={onKeyDown}>
-        {TABS.map((t) => {
-          const selected = tab === t
-          return (
-            <button
-              key={t}
-              ref={(el) => {
-                tabRefs.current[t] = el
-              }}
-              type="button"
-              role="tab"
-              id={`${uid}-tab-${t}`}
-              aria-selected={selected}
-              aria-controls={`${uid}-panel`}
-              tabIndex={selected ? 0 : -1}
-              className={`pg-tab ${selected ? 'is-active' : ''}`}
-              onClick={() => setTab(t)}
-            >
-              {tabLabel(t)}
-              <span className="pg-tab-count">{counts[t]}</span>
-            </button>
-          )
-        })}
-      </div>
+      <Wrap className="pg-page-body">
+        <div className="pg-tabs-scroll">
+          <div className="pg-tabs" role="tablist" aria-label="Your courses" onKeyDown={onKeyDown}>
+            {TABS.map((t) => {
+              const selected = tab === t
+              return (
+                <button
+                  key={t}
+                  ref={(el) => {
+                    tabRefs.current[t] = el
+                  }}
+                  type="button"
+                  role="tab"
+                  id={`${uid}-tab-${t}`}
+                  aria-selected={selected}
+                  aria-controls={`${uid}-panel`}
+                  tabIndex={selected ? 0 : -1}
+                  className={`pg-tab ${selected ? 'is-active' : ''}`}
+                  onClick={() => setTab(t)}
+                >
+                  {tabLabel(t)}
+                  <span className="pg-tab-count">{counts[t]}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
 
-      <div role="tabpanel" id={`${uid}-panel`} aria-labelledby={`${uid}-tab-${tab}`} className="pg-tab-panel">
-        {tab === 'paths' ? (
-          startedPaths.length === 0 ? (
-            emptyNode
+        <div role="tabpanel" id={`${uid}-panel`} aria-labelledby={`${uid}-tab-${tab}`} className="pg-tab-panel">
+          {tab === 'paths' ? (
+            startedPaths.length === 0 ? (
+              emptyNode
+            ) : (
+              <ul className="pg-path-grid">
+                {startedPaths.map((p) => (
+                  <li key={p.id}>
+                    <PathTile path={p} headingLevel={2} />
+                  </li>
+                ))}
+              </ul>
+            )
           ) : (
-            <ul className="pg-rows">
-              {startedPaths.map((p) => (
-                <li key={p.id}>
-                  <PathRow path={{ ...p, description: progressText(p, progress) }} />
-                </li>
-              ))}
-            </ul>
-          )
-        ) : (
-          <CourseList courses={tab === 'saved' ? saved : byStatus[tab]} empty={emptyNode} />
-        )}
-      </div>
+            <CourseList
+              courses={tab === 'saved' ? saved : byStatus[tab]}
+              variant="grid"
+              label={tabLabel(tab)}
+              empty={emptyNode}
+            />
+          )}
+        </div>
+      </Wrap>
     </div>
   )
-}
-
-function progressText(path, progress) {
-  const p = getPathProgress(path.id, progress)
-  return `${p.completed} of ${p.total} done${p.inProgress ? `, ${p.inProgress} in progress` : ''}`
 }

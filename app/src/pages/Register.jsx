@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Link, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth.js'
+import DemoNotice from '../components/DemoNotice.jsx'
 import PasswordInput from '../components/PasswordInput.jsx'
 import { EMAIL_RE, returnPath, usePageTitle } from '../components/utils.js'
-import { DemoLine, Note } from './parts.jsx'
+import { AuthCard, Note } from './parts.jsx'
 
 function validate({ name, email, password, confirm }) {
   const errors = {}
@@ -83,40 +84,35 @@ export default function Register() {
   const pwHint = 'At least 6 characters.'
 
   return (
-    <div className="pg-auth">
-      <div className="panel pg-auth-panel">
-        <h1 className="pg-auth-title">Create an account</h1>
-        <p className="pg-auth-sub">Keep a list of courses and track what you are taking.</p>
-        {location.state?.message && (
-          <Note type="warn" role="status">
-            {location.state.message}
-          </Note>
-        )}
-        {formError && (
-          <Note type="error" role="alert">
-            {formError}
-          </Note>
-        )}
+    <AuthCard title="Create a free account" sub="Save courses, compare them and track your learning paths.">
+      {location.state?.message && (
+        <Note type="warn" role="status">
+          {location.state.message}
+        </Note>
+      )}
+      {formError && (
+        <Note type="error" role="alert">
+          {formError}
+        </Note>
+      )}
 
-        <form className="pg-form" onSubmit={onSubmit} noValidate>
-          {field('name', 'Name', <input {...common('name')} type="text" className="input" autoComplete="name" />)}
-          {field('email', 'Email', <input {...common('email')} type="email" className="input" autoComplete="email" />)}
-          {field('password', 'Password', <PasswordInput {...common('password', pwHint)} autoComplete="new-password" />, pwHint)}
-          {field('confirm', 'Confirm password', <PasswordInput {...common('confirm')} autoComplete="new-password" />)}
-          <button type="submit" className="btn btn-primary pg-btn-block" disabled={busy}>
-            {busy ? 'Creating account…' : 'Create account'}
-          </button>
-        </form>
+      <form className="pg-form" onSubmit={onSubmit} noValidate>
+        {field('name', 'Name', <input {...common('name')} type="text" className="input" autoComplete="name" />)}
+        {field('email', 'Email', <input {...common('email')} type="email" className="input" autoComplete="email" />)}
+        {field('password', 'Password', <PasswordInput {...common('password', pwHint)} autoComplete="new-password" />, pwHint)}
+        {field('confirm', 'Confirm password', <PasswordInput {...common('confirm')} autoComplete="new-password" />)}
+        <button type="submit" className="btn btn-primary pg-btn-block pg-btn-lg" disabled={busy}>
+          {busy ? 'Creating account…' : 'Create account'}
+        </button>
+      </form>
 
-        <DemoLine />
-
-        <p className="pg-auth-switch">
-          Have an account?{' '}
-          <Link to="/login" state={location.state}>
-            Log in
-          </Link>
-        </p>
-      </div>
-    </div>
+      <p className="pg-auth-switch">
+        Already have an account?{' '}
+        <Link to="/login" state={location.state}>
+          Log in
+        </Link>
+      </p>
+      <DemoNotice />
+    </AuthCard>
   )
 }

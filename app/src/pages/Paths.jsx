@@ -2,8 +2,9 @@ import { Link } from 'react-router-dom'
 import { Route } from 'lucide-react'
 import { getAllPaths } from '../lib/paths.js'
 import { useAuth } from '../hooks/useAuth.js'
+import PageBand from '../components/PageBand.jsx'
 import { usePageTitle } from '../components/utils.js'
-import { Empty, Note, PageHead, PathRow, SectionHead } from './parts.jsx'
+import { Empty, Note, PathTile, Wrap } from './parts.jsx'
 
 export default function Paths() {
   usePageTitle('Learning paths')
@@ -12,32 +13,37 @@ export default function Paths() {
 
   return (
     <div className="pg-paths">
-      <PageHead
+      <PageBand
+        crumbs={[{ label: 'Home', to: '/' }, { label: 'Learning paths' }]}
         title="Learning paths"
-        desc="Ordered courses from different platforms that lead to one goal, such as a first data analyst job."
+        desc="Courses from different platforms, put in an order that leads to one goal, such as a first data analyst job."
       />
-      {!user && (
-        <Note>
-          <Link to="/login" state={{ from: '/paths' }}>
-            Log in
-          </Link>{' '}
-          to track your progress through a path.
-        </Note>
-      )}
-      {paths.length === 0 ? (
-        <Empty icon={Route} title="No learning paths yet" />
-      ) : (
-        <section className="pg-section pg-section-first" aria-labelledby="h-all-paths">
-          <SectionHead id="h-all-paths" label="Paths" count={paths.length} />
-          <ul className="pg-rows" aria-label="Learning paths">
-            {paths.map((p) => (
-              <li key={p.id}>
-                <PathRow path={p} />
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      <Wrap className="pg-page-body">
+        {!user && (
+          <Note>
+            <Link to="/login" state={{ from: '/paths' }}>
+              Log in
+            </Link>{' '}
+            to track your progress through a path.
+          </Note>
+        )}
+        {paths.length === 0 ? (
+          <Empty icon={Route} title="No learning paths yet" />
+        ) : (
+          <>
+            <p className="pg-result-count">
+              <strong>{paths.length}</strong> {paths.length === 1 ? 'path' : 'paths'}
+            </p>
+            <ul className="pg-path-grid" aria-label="Learning paths">
+              {paths.map((p) => (
+                <li key={p.id}>
+                  <PathTile path={p} headingLevel={2} />
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </Wrap>
     </div>
   )
 }

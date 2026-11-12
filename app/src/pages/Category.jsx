@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom'
 import { getCategory } from '../lib/courses.js'
 import CourseListView from '../components/CourseListView.jsx'
 import { usePageTitle } from '../components/utils.js'
+import { categoryDesc } from './categoryCopy.js'
 import NotFound from './NotFound.jsx'
 
 export default function Category() {
@@ -16,10 +17,10 @@ export default function Category() {
   return (
     <CourseListView
       key={category.slug}
-      title={category.name}
+      title={`${category.name} courses`}
       fixedCategory={category.slug}
-      subtitle={category.group === 'technical' ? 'Technical category.' : 'Non-technical category.'}
-      breadcrumbs={[{ label: 'Courses', to: '/courses' }, { label: category.name }]}
+      subtitle={categoryDesc(category)}
+      breadcrumbs={[{ label: 'Home', to: '/' }, { label: 'Courses', to: '/courses' }, { label: category.name }]}
     />
   )
 }

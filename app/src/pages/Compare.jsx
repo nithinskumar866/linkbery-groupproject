@@ -1,26 +1,33 @@
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowUpRight, Check, GitCompareArrows, Link2, Share2, X } from 'lucide-react'
+import { Check, Columns2, Link2, X } from 'lucide-react'
 import { getCompareSummary } from '../lib/courses.js'
 import { useCompare } from '../hooks/useCompare.js'
-import PlatformLogo from '../components/PlatformLogo.jsx'
+import CourseThumb from '../components/CourseThumb.jsx'
+import PageBand from '../components/PageBand.jsx'
 import PriceBadge from '../components/PriceBadge.jsx'
 import { showToast } from '../components/toast.js'
 import { formatNumber, formatRating, usePageTitle } from '../components/utils.js'
-import { Empty, Note, PageHead } from './parts.jsx'
+import { Empty, Note, Wrap } from './parts.jsx'
+import { byline } from './format.js'
 import { ICON } from './iconProps.js'
 
 const parseIds = (raw) => [...new Set((raw || '').split(',').map((s) => s.trim()).filter(Boolean))]
 
 function Best({ show, children }) {
-  if (!show) return children
   return (
     <span className="pg-best">
       {children}
-      <span className="badge badge-accent">Best</span>
+      {show && <span className="badge pg-badge-best">Best</span>}
     </span>
   )
 }
+
+const CRUMBS = [
+  { label: 'Home', to: '/' },
+  { label: 'Courses', to: '/courses' },
+  { label: 'Compare' },
+]
 
 export default function Compare() {
   usePageTitle('Compare courses')
@@ -68,49 +75,48 @@ export default function Compare() {
     }
   }
 
-  const header = (
-    <PageHead
-      title="Compare"
-      desc={`Up to ${max} courses side by side.`}
-      crumbs={[{ label: 'Courses', to: '/courses' }, { label: 'Compare' }]}
+  const band = (
+    <PageBand
+      crumbs={CRUMBS}
+      title="Compare courses"
+      desc={`Put up to ${max} courses side by side on price, length, level, rating and the skills they teach.`}
     >
       {!shared && courses.length > 0 && (
-        <>
-          <button type="button" className="btn btn-sm" onClick={copyLink}>
+        <div className="pg-band-actions">
+          <button type="button" className="btn btn-secondary" onClick={copyLink}>
             {copied ? <Check {...ICON} /> : <Link2 {...ICON} />}
-            {copied ? 'Link copied' : 'Copy link'}
+            {copied ? 'Link copied' : 'Copy share link'}
           </button>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={clearCompare}>
-            Clear
+          <button type="button" className="btn btn-secondary" onClick={clearCompare}>
+            Clear all
           </button>
-        </>
+        </div>
       )}
-    </PageHead>
+    </PageBand>
   )
 
   if (courses.length === 0) {
     return (
       <div className="pg-compare">
-        {header}
-        <Empty
-          icon={GitCompareArrows}
-          title={shared ? 'None of these courses were found' : 'Nothing to compare yet'}
-          hint={`Use Compare on any course to add it here. You can compare up to ${max}.`}
-        >
-          <Link className="btn btn-primary" to="/courses">
-            Browse courses
-          </Link>
-        </Empty>
+        {band}
+        <Wrap className="pg-page-body">
+          <Empty
+            icon={Columns2}
+            title={shared ? 'None of these courses were found' : 'Nothing to compare yet'}
+            hint={`Use “+ Compare” on any course to add it here. You can compare up to ${max}.`}
+          >
+            <Link className="btn btn-primary" to="/courses">
+              Browse courses
+            </Link>
+          </Empty>
+        </Wrap>
       </div>
     )
   }
 
   const rows = [
-    ['Platform', (c) => c.platform],
     ['Provider', (c) => c.provider],
-    ['Level', (c) => c.level],
-    ['Type', (c) => c.type],
-    ['Duration', (c) => c.duration],
+    ['Platform', (c) => c.platform],
     ['Price', (c) => (c.price ? <PriceBadge price={c.price} /> : null)],
     [
       'Rating',
@@ -122,9 +128,12 @@ export default function Compare() {
                 ★
               </span>{' '}
               {formatRating(c.rating)}
+              <span className="visually-hidden"> out of 5</span>
             </span>
           </Best>
-        ) : null,
+        ) : (
+          <span className="pg-dim">No rating yet</span>
+        ),
     ],
     [
       'Reviews',
@@ -135,153 +144,146 @@ export default function Compare() {
           </Best>
         ) : null,
     ],
+    ['Level', (c) => c.level],
+    ['Type', (c) => c.type],
+    ['Duration', (c) => c.duration],
   ]
 
   return (
     <div className="pg-compare">
-      {header}
-
-      {shared && (
-        <div className="pg-note pg-note-info pg-compare-shared">
-          <Share2 {...ICON} />
-          <span>
-            Shared comparison.
-            {sameAsStored ? ' It matches your list.' : ''}
-          </span>
-          {!sameAsStored && (
-            <button type="button" className="btn btn-primary btn-sm" onClick={useThisList}>
-              Use this list
-            </button>
-          )}
-        </div>
-      )}
-
-      {courses.length === 1 && (
-        <Note type="warn">
-          Add at least one more course to compare. <Link to="/courses">Browse courses</Link>
-        </Note>
-      )}
-
-      {courses.length > 1 && (
-        <section className="pg-compare-common" aria-labelledby="h-common">
-          <h2 id="h-common" className="section-label">
-            Skills in common <span className="pg-count">· {sharedSkills.length}</span>
-          </h2>
-          {sharedSkills.length > 0 ? (
-            <ul className="pg-tags">
-              {sharedSkills.map((s) => (
-                <li key={s}>
-                  <span className="tag tag-green">{s}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="pg-dim">None. These courses teach different things.</p>
-          )}
-        </section>
-      )}
-
-      <div className="pg-compare-scroll" role="region" aria-label="Comparison table" tabIndex={0}>
-        <table className="pg-compare-table">
-          <thead>
-            <tr>
-              <th scope="col" className="pg-compare-attr">
-                <span className="visually-hidden">Attribute</span>
-              </th>
-              {courses.map((c) => (
-                <th key={c.id} scope="col" className="pg-compare-course">
-                  <div className="pg-compare-course-top">
-                    <PlatformLogo name={c.platform} size={20} decorative />
-                    <button
-                      type="button"
-                      className="btn btn-ghost btn-icon btn-sm"
-                      onClick={() => remove(c.id)}
-                      aria-label={`Remove ${c.title} from comparison`}
-                      title="Remove"
-                    >
-                      <X {...ICON} />
-                    </button>
-                  </div>
-                  <Link to={`/courses/${encodeURIComponent(c.id)}`} className="pg-compare-title">
-                    {c.title}
-                  </Link>
-                  {c.url && (
-                    <a className="pg-compare-go" href={c.url} target="_blank" rel="noopener noreferrer">
-                      Go to course <ArrowUpRight {...ICON} size={14} />
-                      <span className="visually-hidden"> (opens in a new tab)</span>
-                    </a>
-                  )}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map(([label, get]) => (
-              <tr key={label}>
-                <th scope="row" className="pg-compare-attr">
-                  {label}
-                </th>
-                {courses.map((c) => {
-                  const v = get(c)
-                  return <td key={c.id}>{v ?? <span className="pg-dim">-</span>}</td>
-                })}
-              </tr>
-            ))}
-            <tr>
-              <th scope="row" className="pg-compare-attr">
-                Skills
-              </th>
-              {courses.map((c) => (
-                <td key={c.id}>
-                  {c.skills?.length ? (
-                    <ul className="pg-tags">
-                      {c.skills.map((s) => (
-                        <li key={s}>
-                          {sharedSet.has(s) ? (
-                            <span className="tag tag-green" title="Every course here teaches this">
-                              {s}
-                            </span>
-                          ) : (
-                            <span className="tag">{s}</span>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <span className="pg-dim">-</span>
-                  )}
-                </td>
-              ))}
-            </tr>
-            {courses.length > 2 && (
-              <tr>
-                <th scope="row" className="pg-compare-attr">
-                  Only here
-                </th>
-                {courses.map((c) => {
-                  const only = uniqueSkills[c.id] || []
-                  return (
-                    <td key={c.id}>
-                      {only.length ? (
-                        <span className="pg-compare-only">{only.join(', ')}</span>
-                      ) : (
-                        <span className="pg-dim">None</span>
-                      )}
-                    </td>
-                  )
-                })}
-              </tr>
+      {band}
+      <Wrap className="pg-page-body">
+        {shared && (
+          <div className="alert alert-info pg-note pg-compare-shared">
+            <Link2 {...ICON} />
+            <div className="pg-note-body">
+              <strong>Shared comparison.</strong>
+              {sameAsStored ? ' It matches your list.' : ' Your own list is unchanged until you choose to use this one.'}
+            </div>
+            {!sameAsStored && (
+              <button type="button" className="btn btn-primary" onClick={useThisList}>
+                Use this list
+              </button>
             )}
-          </tbody>
-        </table>
-      </div>
+          </div>
+        )}
 
-      {courses.length > 1 && (
-        <p className="field-hint pg-compare-legend">
-          <span className="tag tag-green">Green</span> skills are taught by every course in the table.{' '}
-          <span className="badge badge-accent">Best</span> marks the highest rating and review count.
-        </p>
-      )}
+        {courses.length === 1 && (
+          <Note type="warn">
+            Add at least one more course to compare. <Link to="/courses">Browse courses</Link>
+          </Note>
+        )}
+
+        <div className="pg-table-scroll pg-compare-scroll" role="region" aria-label="Comparison table" tabIndex={0}>
+          <table className="pg-table pg-compare-table">
+            <caption className="visually-hidden">Course comparison</caption>
+            <thead>
+              <tr>
+                <th scope="col" className="pg-sticky-col">
+                  <span className="visually-hidden">Attribute</span>
+                </th>
+                {courses.map((c) => (
+                  <th key={c.id} scope="col" className="pg-compare-course">
+                    <div className="pg-compare-thumb">
+                      <CourseThumb course={c} size="sm" />
+                      <button
+                        type="button"
+                        className="pg-compare-remove"
+                        onClick={() => remove(c.id)}
+                        aria-label={`Remove ${c.title} from comparison`}
+                      >
+                        <X {...ICON} size={16} />
+                      </button>
+                    </div>
+                    <span className="pg-compare-by">{byline(c)}</span>
+                    <Link to={`/courses/${encodeURIComponent(c.id)}`} className="pg-compare-title">
+                      {c.title}
+                    </Link>
+                    {c.url && (
+                      <a className="pg-compare-go" href={c.url} target="_blank" rel="noopener noreferrer">
+                        Go to course <span aria-hidden="true">↗</span>
+                        <span className="visually-hidden"> on {c.platform} (opens in a new tab)</span>
+                      </a>
+                    )}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map(([label, get]) => (
+                <tr key={label}>
+                  <th scope="row" className="pg-sticky-col">
+                    {label}
+                  </th>
+                  {courses.map((c) => {
+                    const v = get(c)
+                    return <td key={c.id}>{v ?? <span className="pg-dim">Not listed</span>}</td>
+                  })}
+                </tr>
+              ))}
+              <tr>
+                <th scope="row" className="pg-sticky-col">
+                  Skills
+                </th>
+                {courses.map((c) => (
+                  <td key={c.id}>
+                    {c.skills?.length ? (
+                      <ul className="pg-tags">
+                        {c.skills.map((s) => (
+                          <li key={s}>
+                            {sharedSet.has(s) ? (
+                              <span className="tag pg-tag-shared">
+                                <Check {...ICON} size={12} />
+                                {s}
+                                <span className="visually-hidden"> (taught by every course here)</span>
+                              </span>
+                            ) : (
+                              <span className="tag">{s}</span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <span className="pg-dim">Not listed</span>
+                    )}
+                  </td>
+                ))}
+              </tr>
+              {courses.length > 2 && (
+                <tr>
+                  <th scope="row" className="pg-sticky-col">
+                    Only here
+                  </th>
+                  {courses.map((c) => {
+                    const only = uniqueSkills[c.id] || []
+                    return (
+                      <td key={c.id}>
+                        {only.length ? only.join(', ') : <span className="pg-dim">None</span>}
+                      </td>
+                    )
+                  })}
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {courses.length > 1 && (
+          <div className="pg-compare-legend">
+            <p>
+              <span className="tag pg-tag-shared">
+                <Check {...ICON} size={12} />
+                Green
+              </span>{' '}
+              skills are taught by every course in the table
+              {sharedSkills.length > 0 ? ` (${sharedSkills.length} in common).` : '. These courses have none in common.'}
+            </p>
+            <p>
+              <span className="badge pg-badge-best">Best</span> marks the highest rating and the most reviews.
+            </p>
+          </div>
+        )}
+      </Wrap>
     </div>
   )
 }

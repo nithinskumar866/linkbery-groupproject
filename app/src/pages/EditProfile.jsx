@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom'
 import { ArrowLeft, Upload } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth.js'
 import Avatar from '../components/Avatar.jsx'
+import DemoNotice from '../components/DemoNotice.jsx'
+import PageBand from '../components/PageBand.jsx'
 import PasswordInput from '../components/PasswordInput.jsx'
 import { fileToAvatarDataUrl } from '../components/imageResize.js'
 import { EMAIL_RE, usePageTitle } from '../components/utils.js'
-import { DemoLine, Note, PageHead } from './parts.jsx'
+import { Note, Wrap } from './parts.jsx'
 import { ICON } from './iconProps.js'
 
 function Status({ status }) {
@@ -51,7 +53,10 @@ function ProfileForm({ user, updateProfile }) {
     if (name.trim().length < 2) errs.name = 'Please enter your name (at least 2 characters).'
     if (!EMAIL_RE.test(email.trim())) errs.email = 'Please enter a valid email address.'
     setErrors(errs)
-    if (Object.keys(errs).length) return
+    if (Object.keys(errs).length) {
+      document.getElementById(`edit-${Object.keys(errs)[0]}`)?.focus()
+      return
+    }
     setBusy(true)
     try {
       await updateProfile({ name: name.trim(), email: email.trim(), avatar })
@@ -66,14 +71,14 @@ function ProfileForm({ user, updateProfile }) {
   const preview = { ...user, name: name || user.name, avatar }
 
   return (
-    <form className="panel pg-edit-panel" onSubmit={onSubmit} noValidate aria-labelledby="h-edit-details">
-      <h2 id="h-edit-details" className="section-label">
-        Details
+    <form className="card pg-form-card" onSubmit={onSubmit} noValidate aria-labelledby="edit-details-h">
+      <h2 id="edit-details-h" className="pg-h3">
+        Your details
       </h2>
       <Status status={status} />
 
       <div className="pg-avatar-edit">
-        <Avatar user={preview} size={48} />
+        <Avatar user={preview} size={72} />
         <div className="pg-avatar-controls">
           <div className="pg-avatar-buttons">
             <input
@@ -85,11 +90,11 @@ function ProfileForm({ user, updateProfile }) {
               onChange={onFile}
               aria-describedby="edit-avatar-hint"
             />
-            <label htmlFor="edit-avatar" className="btn btn-sm">
+            <label htmlFor="edit-avatar" className="btn btn-secondary">
               <Upload {...ICON} /> {avatar ? 'Change photo' : 'Upload photo'}
             </label>
             {avatar && (
-              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setAvatar(null)}>
+              <button type="button" className="btn btn-secondary" onClick={() => setAvatar(null)}>
                 Remove
               </button>
             )}
@@ -97,7 +102,11 @@ function ProfileForm({ user, updateProfile }) {
           <span id="edit-avatar-hint" className="field-hint">
             {processing ? 'Resizing image…' : 'JPG, PNG or WebP. Cropped square and resized in your browser.'}
           </span>
-          {errors.avatar && <span className="field-error">{errors.avatar}</span>}
+          {errors.avatar && (
+            <span className="field-error" role="alert">
+              {errors.avatar}
+            </span>
+          )}
         </div>
       </div>
 
@@ -166,7 +175,10 @@ function PasswordForm({ changePassword }) {
     else if (values.newPassword === values.oldPassword) errs.newPassword = 'New password must be different.'
     if (values.confirm !== values.newPassword) errs.confirm = 'Passwords do not match.'
     setErrors(errs)
-    if (Object.keys(errs).length) return
+    if (Object.keys(errs).length) {
+      document.getElementById(`pw-${Object.keys(errs)[0]}`)?.focus()
+      return
+    }
     setBusy(true)
     try {
       await changePassword({ oldPassword: values.oldPassword, newPassword: values.newPassword })
@@ -202,16 +214,16 @@ function PasswordForm({ changePassword }) {
   )
 
   return (
-    <form className="panel pg-edit-panel" onSubmit={onSubmit} noValidate aria-labelledby="h-edit-pw">
-      <h2 id="h-edit-pw" className="section-label">
-        Password
+    <form className="card pg-form-card" onSubmit={onSubmit} noValidate aria-labelledby="edit-pw-h">
+      <h2 id="edit-pw-h" className="pg-h3">
+        Change password
       </h2>
       <Status status={status} />
       {row('oldPassword', 'Current password', 'current-password')}
       {row('newPassword', 'New password', 'new-password')}
       {row('confirm', 'Confirm new password', 'new-password')}
       <div className="pg-form-actions">
-        <button type="submit" className="btn" disabled={busy}>
+        <button type="submit" className="btn btn-secondary" disabled={busy}>
           {busy ? 'Updating…' : 'Change password'}
         </button>
       </div>
@@ -226,16 +238,22 @@ export default function EditProfile() {
 
   return (
     <div className="pg-edit">
-      <PageHead title="Edit profile" crumbs={[{ label: 'Profile', to: '/profile' }, { label: 'Edit' }]}>
-        <Link className="btn btn-ghost btn-sm" to="/profile">
-          <ArrowLeft {...ICON} /> Back
+      <PageBand
+        crumbs={[{ label: 'Home', to: '/' }, { label: 'Profile', to: '/profile' }, { label: 'Edit profile' }]}
+        title="Edit profile"
+        desc="Change your name, email, photo or password."
+      >
+        <Link className="btn btn-secondary" to="/profile">
+          <ArrowLeft {...ICON} /> Back to profile
         </Link>
-      </PageHead>
-      <DemoLine />
-      <div className="pg-edit-grid">
-        <ProfileForm user={user} updateProfile={updateProfile} />
-        <PasswordForm changePassword={changePassword} />
-      </div>
+      </PageBand>
+      <Wrap className="pg-page-body">
+        <DemoNotice />
+        <div className="pg-edit-grid">
+          <ProfileForm user={user} updateProfile={updateProfile} />
+          <PasswordForm changePassword={changePassword} />
+        </div>
+      </Wrap>
     </div>
   )
 }

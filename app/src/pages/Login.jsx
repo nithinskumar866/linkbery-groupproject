@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Link, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth.js'
+import DemoNotice from '../components/DemoNotice.jsx'
 import PasswordInput from '../components/PasswordInput.jsx'
 import { EMAIL_RE, returnPath, usePageTitle } from '../components/utils.js'
-import { DemoLine, Note } from './parts.jsx'
+import { AuthCard, Note } from './parts.jsx'
 
 function validate({ email, password }) {
   const errors = {}
@@ -48,79 +49,73 @@ export default function Login() {
   }
 
   return (
-    <div className="pg-auth">
-      <div className="panel pg-auth-panel">
-        <h1 className="pg-auth-title">Log in</h1>
-        <p className="pg-auth-sub">Save courses and track your progress.</p>
+    <AuthCard title="Log in to Linkbery" sub="Welcome back. Your saved courses and progress are waiting.">
+      {message && (
+        <Note type="warn" role="status">
+          {message}
+        </Note>
+      )}
+      {formError && (
+        <Note type="error" role="alert">
+          {formError}
+        </Note>
+      )}
 
-        {message && (
-          <Note type="warn" role="status">
-            {message}
-          </Note>
-        )}
-        {formError && (
-          <Note type="error" role="alert">
-            {formError}
-          </Note>
-        )}
+      <form className="pg-form" onSubmit={onSubmit} noValidate>
+        <div className="field">
+          <label className="field-label" htmlFor="login-email">
+            Email
+          </label>
+          <input
+            id="login-email"
+            name="email"
+            type="email"
+            className="input"
+            autoComplete="email"
+            value={values.email}
+            onChange={onChange}
+            aria-invalid={Boolean(errors.email)}
+            aria-describedby={errors.email ? 'login-email-err' : undefined}
+            required
+          />
+          {errors.email && (
+            <span id="login-email-err" className="field-error">
+              {errors.email}
+            </span>
+          )}
+        </div>
+        <div className="field">
+          <label className="field-label" htmlFor="login-password">
+            Password
+          </label>
+          <PasswordInput
+            id="login-password"
+            name="password"
+            autoComplete="current-password"
+            value={values.password}
+            onChange={onChange}
+            aria-invalid={Boolean(errors.password)}
+            aria-describedby={errors.password ? 'login-password-err' : undefined}
+            required
+          />
+          {errors.password && (
+            <span id="login-password-err" className="field-error">
+              {errors.password}
+            </span>
+          )}
+        </div>
+        <button type="submit" className="btn btn-primary pg-btn-block pg-btn-lg" disabled={busy}>
+          {busy ? 'Logging in…' : 'Log in'}
+        </button>
+      </form>
 
-        <form className="pg-form" onSubmit={onSubmit} noValidate>
-          <div className="field">
-            <label className="field-label" htmlFor="login-email">
-              Email
-            </label>
-            <input
-              id="login-email"
-              name="email"
-              type="email"
-              className="input"
-              autoComplete="email"
-              value={values.email}
-              onChange={onChange}
-              aria-invalid={Boolean(errors.email)}
-              aria-describedby={errors.email ? 'login-email-err' : undefined}
-              required
-            />
-            {errors.email && (
-              <span id="login-email-err" className="field-error">
-                {errors.email}
-              </span>
-            )}
-          </div>
-          <div className="field">
-            <label className="field-label" htmlFor="login-password">
-              Password
-            </label>
-            <PasswordInput
-              id="login-password"
-              name="password"
-              autoComplete="current-password"
-              value={values.password}
-              onChange={onChange}
-              aria-invalid={Boolean(errors.password)}
-              aria-describedby={errors.password ? 'login-password-err' : undefined}
-              required
-            />
-            {errors.password && (
-              <span id="login-password-err" className="field-error">
-                {errors.password}
-              </span>
-            )}
-          </div>
-          <button type="submit" className="btn btn-primary pg-btn-block" disabled={busy}>
-            {busy ? 'Logging in…' : 'Log in'}
-          </button>
-        </form>
-
-        <DemoLine />
-
-        <p className="pg-auth-switch">
-          No account?{' '}
-          <Link to="/register" state={location.state}>
-            Create one
-          </Link>
-        </p>
-      </div>
-    </div>
+      <p className="pg-auth-switch">
+        New to Linkbery?{' '}
+        <Link to="/register" state={location.state}>
+          Create a free account
+        </Link>
+      </p>
+      <DemoNotice />
+    </AuthCard>
   )
 }

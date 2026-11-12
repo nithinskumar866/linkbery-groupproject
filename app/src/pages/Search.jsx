@@ -9,8 +9,9 @@ export default function Search() {
   return (
     <CourseListView
       searchMode
-      title={q ? 'Search results' : 'Search'}
-      subtitle={q ? undefined : 'Matches titles, providers, platforms, skills and descriptions.'}
+      title={q ? `Results for “${q}”` : 'Search courses'}
+      subtitle="Matches course titles, providers, platforms, skills and descriptions."
+      breadcrumbs={[{ label: 'Home', to: '/' }, { label: 'Courses', to: '/courses' }, { label: 'Search' }]}
     />
   )
 }

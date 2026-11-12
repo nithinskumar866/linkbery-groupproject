@@ -1,2 +1,2 @@
-/** Default props for every Lucide icon on the pages. */
-export const ICON = { size: 16, strokeWidth: 1.75, 'aria-hidden': true }
+/** Default props for every Lucide icon on the pages (DESIGN.md: 18px, stroke 2). */
+export const ICON = { size: 18, strokeWidth: 2, 'aria-hidden': true }
