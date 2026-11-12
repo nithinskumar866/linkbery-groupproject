@@ -1,0 +1,157 @@
+/*
+ * Linkbery design tokens: professional light theme (default) and a navy dark
+ * theme (opt-in via <html data-theme="dark">). See DESIGN.md before changing.
+ */
+
+:root,
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  /* Surfaces */
+  --bg: #ffffff;
+  --bg-soft: #f6f7fa;      /* page bands, section backgrounds */
+  --surface: #ffffff;      /* cards, panels */
+  --surface-hover: #f8f9fb;
+  --chip: #f1f3f7;         /* skill tags, quiet fills */
+  --overlay: rgba(14, 26, 53, 0.45);
+
+  /* Lines */
+  --border: #e3e6ed;
+  --border-soft: #eef0f4;
+  --border-input: #c9ceda;
+
+  /* Text */
+  --text: #0e1a35;         /* navy ink */
+  --text-2: #3f4a63;       /* body secondary */
+  --text-3: #5b6478;       /* meta, labels */
+  --text-disabled: #9aa1b2;
+
+  /* Brand */
+  --brand: #b0124a;
+  --brand-hover: #950e3e;
+  --brand-tint: #fbe8ef;
+  --on-brand: #ffffff;
+
+  /* Navy bands (hero on course page, stats band, footer) */
+  --navy: #0e1a35;
+  --navy-2: #1c2a4d;
+  --navy-line: #26345a;
+  --on-navy: #ffffff;
+  --on-navy-2: #b9c1d6;
+  --on-navy-3: #dce2f0;
+
+  /* Status */
+  --star: #c27c0e;
+  --star-on-navy: #ffd27a;
+  --green: #0b6b43;
+  --green-tint: #e3f7ec;
+  --blue: #1f4bd8;
+  --blue-tint: #e6eeff;
+  --amber: #8a5300;
+  --amber-tint: #fff4dc;
+  --red: #b42318;
+  --red-tint: #fdecea;
+
+  /* Fallback thumbnail tiles (by category group) */
+  --tile-1: #1e3a8a;
+  --tile-2: #0f5132;
+  --tile-3: #7c2d12;
+  --tile-4: #4c1d95;
+  --tile-5: #155e75;
+  --tile-6: #831843;
+
+  /* Elevation */
+  --shadow-sm: 0 1px 2px rgba(14, 26, 53, 0.06);
+  --shadow-md: 0 6px 18px rgba(14, 26, 53, 0.08);
+  --shadow-lg: 0 12px 32px rgba(14, 26, 53, 0.12);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #0b1428;
+  --bg-soft: #0f1a33;
+  --surface: #121f3b;
+  --surface-hover: #172647;
+  --chip: #1b2a4c;
+  --overlay: rgba(0, 0, 0, 0.6);
+
+  --border: #22325a;
+  --border-soft: #1c2b4f;
+  --border-input: #33456f;
+
+  --text: #eef1f8;
+  --text-2: #c3cbdd;
+  --text-3: #98a3bd;
+  --text-disabled: #66718c;
+
+  --brand: #f0507e;
+  --brand-hover: #ff6b93;
+  --brand-tint: rgba(240, 80, 126, 0.14);
+  --on-brand: #ffffff;
+
+  --navy: #070e1f;
+  --navy-2: #0f1a33;
+  --navy-line: #22325a;
+
+  --star: #ffc24d;
+  --green: #4ade80;
+  --green-tint: rgba(74, 222, 128, 0.12);
+  --blue: #7aa2ff;
+  --blue-tint: rgba(122, 162, 255, 0.14);
+  --amber: #fbbf24;
+  --amber-tint: rgba(251, 191, 36, 0.12);
+  --red: #f87171;
+  --red-tint: rgba(248, 113, 113, 0.12);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+:root {
+  --font: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --text-xs: 0.75rem;     /* 12 */
+  --text-sm: 0.8125rem;   /* 13 */
+  --text-base: 0.9375rem; /* 15 body */
+  --text-md: 1rem;        /* 16 */
+  --text-lg: 1.1875rem;   /* 19 card titles */
+  --text-xl: 1.375rem;    /* 22 section h2 inside pages */
+  --text-2xl: 2rem;       /* 32 section headings */
+  --text-3xl: 2.25rem;    /* 36 page titles */
+  --text-4xl: 2.75rem;    /* 44 course title */
+  --text-hero: 3.375rem;  /* 54 home hero */
+
+  --leading: 1.55;
+  --leading-tight: 1.1;
+  --tracking-tight: -0.025em;
+  --tracking-label: 0.06em;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-14: 56px;
+  --space-16: 64px;
+  --space-18: 72px;
+
+  --radius-sm: 6px;   /* tags */
+  --radius: 8px;      /* buttons, inputs */
+  --radius-lg: 12px;  /* cards */
+  --radius-xl: 16px;  /* big panels, CTA box */
+  --radius-pill: 999px; /* header search, topic tabs, filter chips */
+
+  --header-h: 72px;
+  --content-max: 1280px;
+  --gutter: 32px;
+  --filters-w: 260px;
+
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --dur: 160ms;
+}

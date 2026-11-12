@@ -1,0 +1,131 @@
+[
+  {
+    "id": "data-analyst",
+    "title": "Become a Data Analyst",
+    "description": "Go from spreadsheets to SQL, R and dashboards, ending with a portfolio-ready professional certificate.",
+    "goal": "Get job-ready for entry-level data analyst roles",
+    "level": "Beginner",
+    "categories": ["data-science", "business"],
+    "icon": "fa-chart-line",
+    "steps": [
+      { "courseId": "khan-academy-statistics-and-probability", "title": "Get comfortable with statistics", "note": "Averages, spread and probability are the language every later analysis is written in.", "optional": false },
+      { "courseId": "the-structured-query-language-sql", "title": "Learn SQL basics", "note": "Most analyst work starts with pulling data out of a database, so SQL comes before any tooling.", "optional": false },
+      { "courseId": "google-data-analytics", "title": "Learn the full analysis workflow", "note": "With stats and SQL in hand, this certificate ties cleaning, analysis and Tableau dashboards into one process.", "optional": false },
+      { "courseId": "ibm-data-analyst", "title": "Add Python and Excel depth", "note": "A second certificate adds Python and advanced Excel, which many job postings ask for alongside SQL.", "optional": true },
+      { "courseId": "harvardx-data-science-r-basics", "title": "Go further with R", "note": "Useful if you enjoyed the R part of the Google certificate and want stronger data wrangling skills.", "optional": true }
+    ]
+  },
+  {
+    "id": "web-developer",
+    "title": "Become a Web Developer",
+    "description": "Learn JavaScript, build real websites, add Git and React, and finish by shipping full-stack apps.",
+    "goal": "Build and deploy complete web applications on your own",
+    "level": "Beginner",
+    "categories": ["development", "coding"],
+    "icon": "fa-code",
+    "steps": [
+      { "courseId": "freecodecamp-learn-javascript-full-course", "title": "Learn JavaScript fundamentals", "note": "JavaScript is the one language every browser runs, so it is the foundation for everything after.", "optional": false },
+      { "courseId": "atlassian-version-control-with-git", "title": "Use version control with Git", "note": "Learning Git early means every project from here on is tracked, backed up and shareable.", "optional": false },
+      { "courseId": "udemy-the-web-developer-bootcamp", "title": "Build full websites", "note": "A project-based bootcamp that combines HTML, CSS, JavaScript, Node and databases into working sites.", "optional": false },
+      { "courseId": "udemy-react-the-complete-guide", "title": "Build front ends with React", "note": "Once plain JavaScript feels natural, React is the most requested framework for modern front ends.", "optional": false },
+      { "courseId": "udemy-javascript-understanding-the-weird-parts", "title": "Understand JavaScript deeply", "note": "Closures, prototypes and the event loop explained, which makes debugging React apps far easier.", "optional": true },
+      { "courseId": "cs50-web-programming-with-python-and-javascript", "title": "Ship full-stack apps", "note": "A capstone-style course where you design, build and deploy larger apps with Django and JavaScript.", "optional": false }
+    ]
+  },
+  {
+    "id": "ml-engineer",
+    "title": "Become a Machine Learning Engineer",
+    "description": "Build the Python and math foundations, learn classic machine learning, then train and understand deep neural networks.",
+    "goal": "Train, evaluate and ship machine learning models",
+    "level": "Intermediate",
+    "categories": ["ai-ml", "math", "coding"],
+    "icon": "fa-robot",
+    "steps": [
+      { "courseId": "cs50-introduction-to-programming-with-python", "title": "Learn Python properly", "note": "Every ML library is used from Python, so solid programming skills come first.", "optional": false },
+      { "courseId": "imperial-mathematics-for-machine-learning", "title": "Learn the math behind ML", "note": "Linear algebra and calculus explain what models actually optimize, before you start using them.", "optional": false },
+      { "courseId": "machine-learning", "title": "Learn core machine learning", "note": "Andrew Ng's specialization covers regression, classification and best practices that everything else builds on.", "optional": false },
+      { "courseId": "deeplearning-ai-deep-learning-specialization", "title": "Move on to deep learning", "note": "Neural networks, CNNs and sequence models are the natural next step after classic ML.", "optional": false },
+      { "courseId": "fastai-practical-deep-learning-for-coders", "title": "Train real models end to end", "note": "A top-down, hands-on course that turns theory into deployed models on real data.", "optional": false },
+      { "courseId": "karpathy-neural-networks-zero-to-hero", "title": "Build neural nets from scratch", "note": "Coding backpropagation and a small GPT yourself is the best way to truly understand modern models.", "optional": true }
+    ]
+  },
+  {
+    "id": "ui-ux-designer",
+    "title": "Become a UI/UX Designer",
+    "description": "Learn how to research users, sketch and prototype in Figma, and build a design portfolio.",
+    "goal": "Build a portfolio for junior UI/UX designer roles",
+    "level": "Beginner",
+    "categories": ["ui-ux", "design"],
+    "icon": "fa-pen-ruler",
+    "steps": [
+      { "courseId": "foundations-of-user-experience-ux-design", "title": "Learn UX foundations", "note": "A short, free-to-audit introduction to the UX process and the vocabulary used in every later step.", "optional": false },
+      { "courseId": "innovation-through-design-think-make-break-repeat", "title": "Practise design thinking", "note": "Builds the habit of framing problems and iterating quickly before you open any design tool.", "optional": true },
+      { "courseId": "guvi-ui-ux-design-course", "title": "Research users and wireframe", "note": "Covers personas, user research, wireframing and usability testing, the core of day-to-day UX work.", "optional": false },
+      { "courseId": "get-started-with-figma", "title": "Get hands-on with Figma", "note": "A quick guided project so you are fluent in the industry-standard tool before the big certificate.", "optional": false },
+      { "courseId": "google-ux-design", "title": "Build a portfolio", "note": "The certificate ends with three portfolio projects, which is what hiring managers ask to see.", "optional": false },
+      { "courseId": "calarts-graphic-design-specialization", "title": "Strengthen visual design", "note": "Typography, colour and composition make your UI work look as good as it functions.", "optional": true }
+    ]
+  },
+  {
+    "id": "cybersecurity-analyst",
+    "title": "Become a Cybersecurity Analyst",
+    "description": "Start from IT fundamentals, learn how attacks and defences work, and earn an entry-level security certificate.",
+    "goal": "Get job-ready for entry-level security analyst roles",
+    "level": "Beginner",
+    "categories": ["cybersecurity", "software"],
+    "icon": "fa-shield-halved",
+    "steps": [
+      { "courseId": "google-it-support", "title": "Learn IT fundamentals", "note": "Networking, operating systems and troubleshooting are what you will be defending, so learn them first.", "optional": true },
+      { "courseId": "cs50-introduction-to-cybersecurity", "title": "Understand security concepts", "note": "A free, approachable overview of threats, encryption and secure practices before going hands-on.", "optional": false },
+      { "courseId": "google-cybersecurity", "title": "Learn analyst skills", "note": "Covers SIEM tools, Linux, SQL and incident response, the daily toolkit of a security analyst.", "optional": false },
+      { "courseId": "udemy-learn-ethical-hacking-from-scratch", "title": "Think like an attacker", "note": "Practising real attacks in a lab shows you what the defensive tools are looking for.", "optional": false }
+    ]
+  },
+  {
+    "id": "cloud-devops",
+    "title": "Become a Cloud & DevOps Engineer",
+    "description": "Learn Git, AWS, containers and CI/CD, and finish with an AWS associate-level architecture course.",
+    "goal": "Deploy and operate applications in the cloud",
+    "level": "Intermediate",
+    "categories": ["cloud", "software"],
+    "icon": "fa-cloud",
+    "steps": [
+      { "courseId": "atlassian-version-control-with-git", "title": "Master version control", "note": "All infrastructure and pipelines live in Git repositories, so this comes before anything else.", "optional": false },
+      { "courseId": "aws-cloud-practitioner-essentials", "title": "Learn cloud basics on AWS", "note": "A free overview of core AWS services, pricing and security that the later steps assume.", "optional": false },
+      { "courseId": "udemy-docker-mastery", "title": "Package apps with containers", "note": "Docker and Kubernetes are how modern apps are shipped, and every DevOps role expects them.", "optional": false },
+      { "courseId": "ibm-devops-and-software-engineering", "title": "Automate with CI/CD", "note": "Ties Git, containers and testing together into automated build and deployment pipelines.", "optional": false },
+      { "courseId": "udemy-aws-solutions-architect-associate", "title": "Design cloud architectures", "note": "The final step prepares you for the AWS associate exam and designing systems end to end.", "optional": false }
+    ]
+  },
+  {
+    "id": "project-manager",
+    "title": "Become a Project Manager",
+    "description": "Learn project management basics, earn a recognised certificate and prepare for the PMP track.",
+    "goal": "Get job-ready for entry-level project coordinator and manager roles",
+    "level": "Beginner",
+    "categories": ["project-management", "business"],
+    "icon": "fa-list-check",
+    "steps": [
+      { "courseId": "simplilearn-project-management-for-beginners", "title": "Learn project management basics", "note": "A free primer on scope, schedules and stakeholders to check the field is right for you.", "optional": false },
+      { "courseId": "google-project-management", "title": "Earn a project management certificate", "note": "Covers traditional and Agile methods with realistic artefacts you can show employers.", "optional": false },
+      { "courseId": "simplilearn-pmp-basics", "title": "Prepare for the PMP track", "note": "An introduction to the PMP framework, the certification most senior project roles ask for later.", "optional": false },
+      { "courseId": "wharton-business-foundations", "title": "Understand the business side", "note": "Finance, marketing and operations basics help you talk to the people who sponsor your projects.", "optional": true }
+    ]
+  },
+  {
+    "id": "digital-marketer",
+    "title": "Become a Digital Marketer",
+    "description": "Learn the digital marketing basics, then go deep on e-commerce, social media and campaign design.",
+    "goal": "Plan and run digital marketing campaigns",
+    "level": "Beginner",
+    "categories": ["marketing", "business"],
+    "icon": "fa-bullhorn",
+    "steps": [
+      { "courseId": "simplilearn-digital-marketing-for-beginners", "title": "Learn digital marketing basics", "note": "A free overview of SEO, social, email and paid channels before you specialise.", "optional": false },
+      { "courseId": "google-digital-marketing-and-e-commerce", "title": "Run campaigns and online stores", "note": "Google's certificate covers campaign measurement and e-commerce with hands-on projects.", "optional": false },
+      { "courseId": "meta-social-media-marketing", "title": "Specialise in social media", "note": "Social platforms are where most campaigns run, and Meta's certificate covers paid ads in depth.", "optional": false },
+      { "courseId": "udemy-complete-digital-marketing-course", "title": "Broaden your channel skills", "note": "Fills gaps in areas like YouTube, copywriting and analytics once the core certificates are done.", "optional": true },
+      { "courseId": "udemy-graphic-design-masterclass", "title": "Design your own creatives", "note": "Being able to make your own ad visuals saves time and money on small teams.", "optional": true }
+    ]
+  }
+]
