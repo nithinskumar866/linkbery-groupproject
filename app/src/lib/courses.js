@@ -30,12 +30,37 @@ const KNOWN_PLATFORMS = {
   Guvi: { logo: '/images/guvi.jpg', url: 'https://www.guvi.in' },
   Simplilearn: { logo: '/images/sl.jpg', url: 'https://www.simplilearn.com' },
   Unacademy: { logo: '/images/unacademy.jpg', url: 'https://unacademy.com' },
-  YouTube: { logo: null, url: 'https://www.youtube.com' },
-  'Khan Academy': { logo: null, url: 'https://www.khanacademy.org' },
-  'fast.ai': { logo: null, url: 'https://www.fast.ai' },
+  YouTube: { logo: '/images/platforms/youtube.svg', url: 'https://www.youtube.com' },
+  'Khan Academy': { logo: '/images/platforms/khan-academy.svg', url: 'https://www.khanacademy.org' },
+  'fast.ai': { logo: '/images/platforms/fastai.svg', url: 'https://www.fast.ai' },
 }
 
-const LEVEL_ORDER = ['Beginner', 'Intermediate', 'Advanced', 'Mixed']
+export const LEVELS = Object.freeze(['Beginner', 'Intermediate', 'Advanced', 'Mixed'])
+export const PRICES = Object.freeze(['Free', 'Free to audit', 'Paid'])
+const LEVEL_ORDER = LEVELS
+
+// ---------------------------------------------------------------------------
+// Development-only check for misspelled option keys (CONTRACT.md integration
+// rule): e.g. searchCourses({ q }) instead of { query } must not fail silently.
+// ---------------------------------------------------------------------------
+const IS_DEV = (() => {
+  try {
+    return Boolean(import.meta.env?.DEV)
+  } catch {
+    return false
+  }
+})()
+
+function warnUnknownKeys(fnName, options, allowed) {
+  if (!IS_DEV || !options || typeof options !== 'object') return
+  const unknown = Object.keys(options).filter((k) => !allowed.includes(k))
+  if (unknown.length) {
+    console.warn(`[linkbery] ${fnName}: unknown option(s) ${unknown.map((k) => `"${k}"`).join(', ')} ignored. Allowed: ${allowed.join(', ')}.`)
+  }
+}
+
+const FILTER_KEYS = ['query', 'categories', 'skills', 'levels', 'platforms', 'minRating', 'price', 'sort']
+const RECOMMEND_KEYS = ['level', 'limit']
 
 // ---------------------------------------------------------------------------
 // Memoized derived data
@@ -127,30 +152,45 @@ function matchesAllTokens(course, tokens) {
   return tokens.every((t) => ix.title.includes(t) || ix.other.includes(t) || ix.skills.some((s) => s.includes(t)))
 }
 
-export function searchCourses({
-  query = '',
-  categories = [],
-  skills = [],
-  levels = [],
-  platforms = [],
-  minRating = 0,
-  price = [],
-  sort = 'relevance',
-} = {}) {
-  const tokens = tokenize(query)
-  const skillSet = skills.map((s) => s.toLowerCase())
-  const min = Number(minRating) || 0
+// Accept a single string as a one-item list (e.g. a value read from the URL).
+const asList = (v) => (v == null || v === '' ? [] : Array.isArray(v) ? v : [v])
 
-  const result = courses.filter(
-    (c) =>
+/**
+ * Normalize a filter object into per-facet predicates. "base" covers the
+ * filters that are not facets (query, skills, minRating); the four facets are
+ * separate so getFacetCounts can drop one facet at a time.
+ */
+function buildFilter(filters) {
+  const f = filters && typeof filters === 'object' ? filters : {}
+  const tokens = tokenize(f.query ?? '')
+  const skillSet = asList(f.skills).map((s) => String(s).toLowerCase())
+  const min = Number(f.minRating) || 0
+  const categories = asList(f.categories)
+  const levels = asList(f.levels)
+  const platforms = asList(f.platforms)
+  const price = asList(f.price)
+  return {
+    tokens,
+    sort: f.sort ?? 'relevance',
+    base: (c) =>
       (!tokens.length || matchesAllTokens(c, tokens)) &&
-      (!categories.length || c.categories.some((x) => categories.includes(x))) &&
       (!skillSet.length || skillSet.every((s) => searchIndex.get(c.id).skills.includes(s))) &&
-      (!levels.length || levels.includes(c.level)) &&
-      (!platforms.length || platforms.includes(c.platform)) &&
-      (min <= 0 || (c.rating != null && c.rating >= min)) &&
-      (!price.length || price.includes(c.price)),
-  )
+      (min <= 0 || (c.rating != null && c.rating >= min)),
+    facets: {
+      categories: (c) => !categories.length || c.categories.some((x) => categories.includes(x)),
+      levels: (c) => !levels.length || levels.includes(c.level),
+      platforms: (c) => !platforms.length || platforms.includes(c.platform),
+      price: (c) => !price.length || price.includes(c.price),
+    },
+  }
+}
+
+const FACETS = ['categories', 'levels', 'platforms', 'price']
+
+export function searchCourses(filters = {}) {
+  warnUnknownKeys('searchCourses', filters, FILTER_KEYS)
+  const { tokens, sort, base, facets } = buildFilter(filters)
+  const result = courses.filter((c) => base(c) && FACETS.every((k) => facets[k](c)))
 
   switch (sort) {
     case 'rating':
@@ -184,6 +224,78 @@ export function getRelatedCourses(id, limit = 4) {
     .sort((a, b) => b[1] - a[1] || byRating(a[0], b[0]))
     .slice(0, limit)
     .map(([c]) => c)
+}
+
+// Option value(s) of a course for each facet, and every known option per facet.
+const FACET_VALUES = {
+  categories: (c) => c.categories,
+  levels: (c) => [c.level],
+  platforms: (c) => [c.platform],
+  price: (c) => [c.price],
+}
+const FACET_OPTIONS = {
+  categories: CATEGORIES.map((c) => c.slug),
+  levels: LEVELS,
+  platforms: PLATFORMS.map((p) => p.name),
+  price: PRICES,
+}
+
+/**
+ * Standard faceted counts (CONTRACT.md section 9): the count for option o of
+ * facet F is the number of courses matching every current filter except F's
+ * own selection, with o applied. So selecting "Beginner" does not zero out
+ * "Intermediate"; it shows how many results picking it as well would add.
+ */
+export function getFacetCounts(filters = {}) {
+  warnUnknownKeys('getFacetCounts', filters, FILTER_KEYS)
+  const { base, facets } = buildFilter(filters)
+  const pool = courses.filter(base)
+  const out = {}
+  for (const facet of FACETS) {
+    const counts = Object.fromEntries(FACET_OPTIONS[facet].map((o) => [o, 0]))
+    const others = FACETS.filter((k) => k !== facet)
+    for (const c of pool) {
+      if (!others.every((k) => facets[k](c))) continue
+      for (const v of new Set(FACET_VALUES[facet](c))) if (v in counts) counts[v]++
+    }
+    out[facet] = counts
+  }
+  return out
+}
+
+/** Id of the course with the strictly highest value, or null (no data / tie). */
+function bestBy(list, key) {
+  let best = null
+  let tie = false
+  for (const c of list) {
+    const v = c[key]
+    if (v == null) continue
+    if (!best || v > best[key]) {
+      best = c
+      tie = false
+    } else if (v === best[key]) tie = true
+  }
+  return best && !tie ? best.id : null
+}
+
+export function getCompareSummary(ids = []) {
+  const list = [...new Set(asList(ids))].map((id) => byId.get(id)).filter(Boolean)
+  const skillSets = list.map((c) => new Set(c.skills.map((s) => s.toLowerCase())))
+
+  const sharedSkills =
+    list.length >= 2 ? list[0].skills.filter((s) => skillSets.every((set) => set.has(s.toLowerCase()))) : []
+
+  const uniqueSkills = {}
+  list.forEach((c, i) => {
+    uniqueSkills[c.id] = c.skills.filter((s) => skillSets.every((set, j) => j === i || !set.has(s.toLowerCase())))
+  })
+
+  return {
+    courses: list,
+    sharedSkills,
+    uniqueSkills,
+    best: { rating: bestBy(list, 'rating'), reviews: bestBy(list, 'reviewCount') },
+  }
 }
 
 const INSIGHTS = PLATFORMS.map((platform) => {
@@ -345,11 +457,16 @@ function scoreConcept(concept, ix) {
   return { value: Math.max(skill, title) + 0.3 * Math.min(skill, title), hits }
 }
 
-export function recommendCourses(goalText, { level, limit = 6 } = {}) {
+export function recommendCourses(goalText, options = {}) {
+  warnUnknownKeys('recommendCourses', options, RECOMMEND_KEYS)
+  const { level, limit = 6 } = options ?? {}
   const text = String(goalText ?? '').trim()
   if (!text) return []
   const concepts = parseGoal(text)
-  const wantedLevel = level || LEVEL_WORDS[tokenize(text).find((w) => LEVEL_WORDS[w])] || null
+  // undefined, "" and "Any" (or any non-level value) mean any level; the goal
+  // text may still hint at one ("beginner python").
+  const explicitLevel = LEVELS.find((l) => l.toLowerCase() === String(level ?? '').trim().toLowerCase()) ?? null
+  const wantedLevel = explicitLevel || LEVEL_WORDS[tokenize(text).find((w) => LEVEL_WORDS[w])] || null
   if (!concepts.length) return []
 
   const scored = []

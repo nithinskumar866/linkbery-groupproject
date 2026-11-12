@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { getCourseById, getRelatedCourses } from '../lib/courses.js'
+import { getPathsForCourse } from '../lib/paths.js'
+import CompareButton from '../components/CompareButton.jsx'
+import { StatusControl } from '../components/ProgressStatus.jsx'
 import CourseGrid from '../components/CourseGrid.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import PlatformLogo from '../components/PlatformLogo.jsx'
@@ -44,6 +47,19 @@ export default function CourseDetail() {
   const categories = course.categories || []
   const related = getRelatedCourses(course.id, 4)
   const firstCat = categories[0]
+  const paths = getPathsForCourse(course.id)
+  // When the provider is the platform itself (e.g. Udemy on Udemy), name it once.
+  const sameAsPlatform =
+    Boolean(course.provider && course.platform) && course.provider.trim().toLowerCase() === course.platform.trim().toLowerCase()
+  const platformLink = (text) =>
+    platform?.url ? (
+      <a href={platform.url} target="_blank" rel="noopener noreferrer">
+        {text}
+        <span className="visually-hidden"> (opens in a new tab)</span>
+      </a>
+    ) : (
+      text
+    )
 
   const details = [
     ['Provider', course.provider],
@@ -74,18 +90,14 @@ export default function CourseDetail() {
             <div className="detail-byline">
               <PlatformLogo name={course.platform} size={44} />
               <div>
-                <div className="detail-provider">{course.provider || 'Unknown provider'}</div>
-                <div className="muted">
-                  on{' '}
-                  {platform?.url ? (
-                    <a href={platform.url} target="_blank" rel="noopener noreferrer">
-                      {course.platform}
-                      <span className="visually-hidden"> (opens in a new tab)</span>
-                    </a>
-                  ) : (
-                    course.platform || 'an unknown platform'
-                  )}
-                </div>
+                {sameAsPlatform ? (
+                  <div className="detail-provider">{platformLink(course.platform)}</div>
+                ) : (
+                  <>
+                    <div className="detail-provider">{course.provider || 'Unknown provider'}</div>
+                    <div className="muted">on {course.platform ? platformLink(course.platform) : 'an unknown platform'}</div>
+                  </>
+                )}
               </div>
             </div>
             <div className="detail-tags">
@@ -148,6 +160,8 @@ export default function CourseDetail() {
               <p className="muted">No link available for this course.</p>
             )}
             <SaveButton courseId={course.id} courseTitle={course.title} variant="full" />
+            <CompareButton courseId={course.id} courseTitle={course.title} variant="full" />
+            <StatusControl courseId={course.id} courseTitle={course.title} />
             <p className="field-hint">
               You enrol on {course.platform || 'the provider’s site'}. Prices and availability may have changed since we
               listed it.
@@ -167,6 +181,37 @@ export default function CourseDetail() {
           </div>
         </aside>
       </div>
+
+      {paths.length > 0 && (
+        <section className="home-section" aria-labelledby="h-paths">
+          <div className="section-head">
+            <h2 id="h-paths">Part of these learning paths</h2>
+            <Link to="/paths">All paths</Link>
+          </div>
+          <ul className="path-links">
+            {paths.map((p) => {
+              const index = p.steps.findIndex((st) => st.courseId === course.id)
+              return (
+                <li key={p.id}>
+                  <Link className="path-link card" to={`/paths/${encodeURIComponent(p.id)}`}>
+                    <span className="path-icon path-icon-sm" aria-hidden="true">
+                      <i className={`fa-solid ${p.icon || 'fa-route'}`} />
+                    </span>
+                    <span className="path-link-text">
+                      <strong>{p.title}</strong>
+                      <span className="muted">
+                        Step {index + 1} of {p.steps.length}
+                        {p.steps[index]?.title ? `: ${p.steps[index].title}` : ''}
+                      </span>
+                    </span>
+                    <i className="fa-solid fa-arrow-right" aria-hidden="true" />
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+        </section>
+      )}
 
       {related.length > 0 && (
         <section className="home-section" aria-labelledby="h-related">

@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import Header from './Header.jsx'
 import Sidebar from './Sidebar.jsx'
+import CompareTray from './CompareTray.jsx'
+import Toaster from './Toaster.jsx'
+import { useCompare } from '../hooks/useCompare.js'
 import { applyTheme, getInitialTheme } from './theme.js'
 
 const MOBILE_QUERY = '(max-width: 900px)'
@@ -20,6 +23,8 @@ export default function Layout() {
   const [collapsed, setCollapsed] = useState(initialCollapsed)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const { pathname } = useLocation()
+  const { compareIds } = useCompare()
+  const showTray = compareIds.length > 0 && pathname !== '/compare'
 
   useEffect(() => {
     applyTheme(theme)
@@ -54,7 +59,9 @@ export default function Layout() {
   const closeDrawer = () => setDrawerOpen(false)
 
   return (
-    <div className={`app-shell ${collapsed ? 'sidebar-collapsed' : ''} ${drawerOpen ? 'drawer-open' : ''}`}>
+    <div
+      className={`app-shell ${collapsed ? 'sidebar-collapsed' : ''} ${drawerOpen ? 'drawer-open' : ''} ${showTray ? 'has-tray' : ''}`}
+    >
       <a href="#main-content" className="skip-link">
         Skip to content
       </a>
@@ -77,6 +84,8 @@ export default function Layout() {
           <span className="muted">Course data is collected from public listings; check the provider for current prices.</span>
         </footer>
       </div>
+      {showTray && <CompareTray />}
+      <Toaster />
     </div>
   )
 }

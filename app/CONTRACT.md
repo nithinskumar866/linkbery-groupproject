@@ -148,3 +148,91 @@ useSaved(): { savedIds, isSaved, toggleSaved }
 `src/lib/*.js` and `src/hooks/*.js` currently contain **working stubs** with the
 right signatures and 3 sample courses, so the interface could be built in parallel.
 The data layer replaced their implementations; signatures must not change.
+
+---
+
+# Round 2 additions
+
+Ownership in section 1 is unchanged. New lib/hook/data files belong to the data layer;
+new pages/components/styles/public files belong to the interface layer.
+`app/README.md`, `app/public/_redirects` and `app/vercel.json` belong to the **interface layer**.
+
+> **Integration rule (round 1 bug):** the UI once passed `{ q }` to `searchCourses`,
+> which expects `{ query }`, so search silently returned everything. Call every
+> function with the **exact parameter names below**. Data layer: unknown option
+> keys must not be silently ignored in development. Log `console.warn` for
+> unknown keys in `searchCourses`, `getFacetCounts` and `recommendCourses` when
+> `import.meta.env?.DEV` is true.
+
+## 9. Additions to `src/lib/courses.js`
+
+```js
+LEVELS        // exported const: ["Beginner", "Intermediate", "Advanced", "Mixed"]
+PRICES        // exported const: ["Free", "Free to audit", "Paid"]
+getFacetCounts(filters): {           // filters = same object shape as searchCourses
+  categories: { [slug]: n }, levels: { [level]: n }, platforms: { [name]: n }, price: { [price]: n }
+}
+// Standard faceted counts: the count for an option in facet F is the number of
+// courses matching ALL current filters EXCEPT facet F's own selection, with that
+// option applied. Every known option appears (0 allowed).
+getCompareSummary(ids: string[]): {
+  courses: Course[],                       // same order as ids, unknown ids dropped
+  sharedSkills: string[],                  // skills present in every course (only if >= 2 courses)
+  uniqueSkills: { [courseId]: string[] },  // skills only that course has
+  best: { rating: id | null, reviews: id | null }  // null when no data or a tie for the top
+}
+```
+`recommendCourses(goal, { level })`: `level` undefined, "" or "Any" means any level.
+`getPlatforms()` logos: YouTube `/images/platforms/youtube.svg`,
+Khan Academy `/images/platforms/khan-academy.svg`, fast.ai `/images/platforms/fastai.svg`
+(the interface layer provides these simple SVG marks in `public/`).
+
+## 10. Compare (`src/lib/compare.js`, `src/hooks/useCompare.js`)
+
+Works for guests. localStorage key `linkbery.compare`. Max 3 courses.
+```js
+MAX_COMPARE   // 3
+getCompareIds(): string[]          // stable reference between changes
+addToCompare(id): void             // throws Error("You can compare up to 3 courses. Remove one first.") when full; no-op if present
+removeFromCompare(id): void
+clearCompare(): void
+subscribeCompare(listener): () => void
+useCompare(): { compareIds, isInCompare(id), addToCompare, removeFromCompare, clearCompare, max }
+```
+Route `/compare` shows the stored list; `/compare?ids=a,b,c` (shareable) shows those ids and offers "Use this list" to store them.
+
+## 11. Learning paths (`src/data/paths.json`, `src/lib/paths.js`)
+
+```js
+// paths.json: 6–8 paths, each 4–6 steps, using ONLY existing course ids
+{
+  id: "data-analyst", title: "Become a Data Analyst",
+  description: "One or two sentences.",
+  goal: "Get job-ready for entry-level data analyst roles",
+  level: "Beginner" | "Intermediate" | "Advanced",
+  categories: ["data-science"],     // category slugs
+  icon: "fa-chart-line",
+  steps: [{ courseId, title: "Learn SQL basics", note: "Why this step, one sentence.", optional: false }]
+}
+getAllPaths(): Path[]
+getPathById(id): Path | undefined
+getPathsForCourse(courseId): Path[]
+getPathProgress(pathId, progressMap): { completed, inProgress, total, percent }   // pure; optional steps excluded from total
+```
+Routes: `/paths` (list), `/paths/:id` (ordered steps with course cards + progress bar).
+
+## 12. Progress tracking (`src/lib/progress.js`, `src/hooks/useProgress.js`)
+
+Per logged-in user, key `linkbery.progress.<userId>`. Guests: empty map; `setStatus` throws `Error("Please log in to track your progress")`.
+```js
+STATUSES   // ["planning", "in-progress", "completed"]
+getProgress(): { [courseId]: { status, updatedAt } }   // stable reference between changes
+getStatus(courseId): status | null
+setStatus(courseId, status | null): void                // null removes
+subscribeProgress(listener): () => void
+useProgress(): { progress, getStatus(id), setStatus }
+```
+UI: a status selector on the course detail page (and compact on cards), and a profile section with tabs Planning / In progress / Completed plus path progress.
+
+## 13. Routes added
+`/compare`, `/paths`, `/paths/:id`. Sidebar gains "Learning paths" and "Compare (n)".

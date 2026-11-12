@@ -1,12 +1,12 @@
 import { useId, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { searchCourses } from '../lib/courses.js'
+import { getFacetCounts, searchCourses } from '../lib/courses.js'
 import CourseGrid from './CourseGrid.jsx'
 import EmptyState from './EmptyState.jsx'
 import FilterPanel from './FilterPanel.jsx'
 import PageHeader from './PageHeader.jsx'
 import SkillChip from './SkillChip.jsx'
-import { EMPTY_FILTERS, countActive, readFilters, writeFilters } from './filterParams.js'
+import { EMPTY_FILTERS, countActive, readFilters, toSearchOptions, writeFilters } from './filterParams.js'
 import { SORTS, categoryName } from './utils.js'
 
 /**
@@ -24,12 +24,10 @@ export default function CourseListView({ title, subtitle, icon, breadcrumbs, fix
   const update = (next, replace = true) => setSp(writeFilters(next), { replace })
   const clearFilters = () => update({ ...EMPTY_FILTERS, q: filters.q, sort: filters.sort })
 
-  const query = {
-    ...filters,
-    query: filters.q, // searchCourses takes the text as `query` (CONTRACT §3)
-    categories: fixedCategory ? [fixedCategory] : filters.categories,
-  }
-  const results = searchCourses(query)
+  // searchCourses takes the text as `query`, not `q` (CONTRACT §3)
+  const options = toSearchOptions(filters, { fixedCategory })
+  const results = searchCourses(options)
+  const counts = getFacetCounts(options)
   const nothingAsked = searchMode && !filters.q && activeCount === 0
 
   const onSearch = (e) => {
@@ -61,6 +59,7 @@ export default function CourseListView({ title, subtitle, icon, breadcrumbs, fix
             onChange={(next) => update(next)}
             onClear={clearFilters}
             activeCount={activeCount}
+            counts={counts}
             hideCategories={ignoreCategories}
           />
         </div>

@@ -64,8 +64,8 @@ export function categoryName(slug) {
   return getCategory(slug)?.name || slug
 }
 
-export const LEVELS = ['Beginner', 'Intermediate', 'Advanced', 'Mixed']
-export const PRICES = ['Free', 'Free to audit', 'Paid']
+// Single source of truth for these lists is the lib (CONTRACT §9).
+export { LEVELS, PRICES } from '../lib/courses.js'
 export const SORTS = [
   { value: 'relevance', label: 'Relevance' },
   { value: 'rating', label: 'Highest rated' },

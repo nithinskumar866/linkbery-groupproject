@@ -1,6 +1,8 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { getAllSkills, getCategories, getOverallStats, getPlatforms, searchCourses } from '../lib/courses.js'
+import { getAllPaths } from '../lib/paths.js'
 import CourseGrid from '../components/CourseGrid.jsx'
+import PathCard from '../components/PathCard.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import PlatformLogo from '../components/PlatformLogo.jsx'
 import SkillChip from '../components/SkillChip.jsx'
@@ -29,6 +31,7 @@ export default function Home() {
   const skills = getAllSkills().slice(0, 14)
   const featured = searchCourses({ sort: 'rating' }).slice(0, 6)
   const platforms = getPlatforms()
+  const paths = getAllPaths().slice(0, 3)
   const avg = formatRating(stats?.avgRating)
 
   const onSearch = (e) => {
@@ -129,6 +132,22 @@ export default function Home() {
           empty={<EmptyState title="No courses yet" icon="fa-book-open" />}
         />
       </section>
+
+      {paths.length > 0 && (
+        <section className="home-section" aria-labelledby="h-paths">
+          <div className="section-head">
+            <h2 id="h-paths">Learning paths</h2>
+            <Link to="/paths">All learning paths</Link>
+          </div>
+          <ul className="path-grid" aria-label="Learning paths">
+            {paths.map((p) => (
+              <li key={p.id}>
+                <PathCard path={p} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {platforms.length > 0 && (
         <section className="home-section" aria-labelledby="h-platforms">

@@ -5,6 +5,7 @@ import { useSaved } from '../hooks/useSaved.js'
 import Avatar from '../components/Avatar.jsx'
 import CourseGrid from '../components/CourseGrid.jsx'
 import EmptyState from '../components/EmptyState.jsx'
+import MyLearning from '../components/MyLearning.jsx'
 import { formatDate, usePageTitle } from '../components/utils.js'
 
 export default function Profile() {
@@ -54,6 +55,8 @@ export default function Profile() {
           </button>
         </div>
       </section>
+
+      <MyLearning />
 
       <section className="home-section" aria-labelledby="h-saved">
         <div className="section-head">

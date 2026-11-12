@@ -1,28 +1,48 @@
 import { useId } from 'react'
-import { getAllCourses, getAllSkills, getCategories, getPlatforms } from '../lib/courses.js'
+import { LEVELS, PRICES, getAllCourses, getAllSkills, getCategories, getPlatforms } from '../lib/courses.js'
 import SkillChip from './SkillChip.jsx'
-import { LEVELS, PRICES, RATING_OPTIONS } from './utils.js'
+import { RATING_OPTIONS } from './utils.js'
 
 function toggle(list, value) {
   return list.includes(value) ? list.filter((v) => v !== value) : [...list, value]
 }
 
-function CheckGroup({ legend, options, selected, onToggle }) {
+/**
+ * Checkbox group. `counts` ({ [value]: n }, from getFacetCounts) is optional; when given,
+ * each option shows its count, and options with 0 results are dimmed and disabled
+ * unless they are already selected (so they can still be unticked).
+ */
+function CheckGroup({ legend, options, selected, onToggle, counts }) {
   return (
     <fieldset className="filter-group">
       <legend>{legend}</legend>
       <ul className="check-list">
-        {options.map((o) => (
-          <li key={o.value}>
-            <label className="check">
-              <input type="checkbox" checked={selected.includes(o.value)} onChange={() => onToggle(o.value)} />
-              <span>
-                {o.icon && <i className={`fa-solid ${o.icon} check-icon`} aria-hidden="true" />}
-                {o.label}
-              </span>
-            </label>
-          </li>
-        ))}
+        {options.map((o) => {
+          const checked = selected.includes(o.value)
+          const n = counts ? (counts[o.value] ?? 0) : null
+          const empty = n === 0
+          return (
+            <li key={o.value}>
+              <label className={`check ${empty ? 'is-empty' : ''}`}>
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  disabled={empty && !checked}
+                  onChange={() => onToggle(o.value)}
+                />
+                <span className="check-label">
+                  {o.icon && <i className={`fa-solid ${o.icon} check-icon`} aria-hidden="true" />}
+                  {o.label}
+                </span>
+                {n !== null && (
+                  <span className="check-count" aria-label={`${n} ${n === 1 ? 'course' : 'courses'}`}>
+                    {n}
+                  </span>
+                )}
+              </label>
+            </li>
+          )
+        })}
       </ul>
     </fieldset>
   )
@@ -38,7 +58,7 @@ function platformNames() {
  * Controlled filter sidebar. `filters` is the object from filterParams.readFilters,
  * `onChange(next)` receives the whole updated object.
  */
-export default function FilterPanel({ filters, onChange, onClear, activeCount = 0, hideCategories = false, id }) {
+export default function FilterPanel({ filters, onChange, onClear, activeCount = 0, hideCategories = false, counts, id }) {
   const uid = useId()
   const set = (patch) => onChange({ ...filters, ...patch })
   const categories = getCategories()
@@ -63,12 +83,14 @@ export default function FilterPanel({ filters, onChange, onClear, activeCount = 
             legend="Technical"
             options={categories.filter((c) => c.group === 'technical').map((c) => ({ value: c.slug, label: c.name, icon: c.icon }))}
             selected={filters.categories}
+            counts={counts?.categories}
             onToggle={(v) => set({ categories: toggle(filters.categories, v) })}
           />
           <CheckGroup
             legend="Non-technical"
             options={categories.filter((c) => c.group !== 'technical').map((c) => ({ value: c.slug, label: c.name, icon: c.icon }))}
             selected={filters.categories}
+            counts={counts?.categories}
             onToggle={(v) => set({ categories: toggle(filters.categories, v) })}
           />
         </>
@@ -78,6 +100,7 @@ export default function FilterPanel({ filters, onChange, onClear, activeCount = 
         legend="Level"
         options={LEVELS.map((l) => ({ value: l, label: l }))}
         selected={filters.levels}
+        counts={counts?.levels}
         onToggle={(v) => set({ levels: toggle(filters.levels, v) })}
       />
 
@@ -85,6 +108,7 @@ export default function FilterPanel({ filters, onChange, onClear, activeCount = 
         legend="Platform"
         options={platformNames().map((p) => ({ value: p, label: p }))}
         selected={filters.platforms}
+        counts={counts?.platforms}
         onToggle={(v) => set({ platforms: toggle(filters.platforms, v) })}
       />
 
@@ -119,6 +143,7 @@ export default function FilterPanel({ filters, onChange, onClear, activeCount = 
         legend="Price"
         options={PRICES.map((p) => ({ value: p, label: p }))}
         selected={filters.price}
+        counts={counts?.price}
         onToggle={(v) => set({ price: toggle(filters.price, v) })}
       />
 

@@ -1,10 +1,13 @@
 import { Link, NavLink } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth.js'
+import { useCompare } from '../hooks/useCompare.js'
 import Avatar from './Avatar.jsx'
 
 const NAV = [
   { to: '/', label: 'Home', icon: 'fa-house', end: true },
   { to: '/courses', label: 'Courses', icon: 'fa-graduation-cap' },
+  { to: '/paths', label: 'Learning paths', icon: 'fa-route' },
+  { to: '/compare', label: 'Compare', icon: 'fa-code-compare', count: 'compare' },
   { to: '/recommend', label: 'Recommend', icon: 'fa-wand-magic-sparkles' },
   { to: '/insights', label: 'Insights', icon: 'fa-chart-column' },
   { to: '/profile', label: 'Profile & saved', icon: 'fa-bookmark' },
@@ -14,6 +17,7 @@ const NAV = [
 
 export default function Sidebar({ onNavigate, collapsed, drawerOpen }) {
   const { user } = useAuth()
+  const { compareIds } = useCompare()
 
   return (
     <nav
@@ -50,14 +54,17 @@ export default function Sidebar({ onNavigate, collapsed, drawerOpen }) {
       </div>
 
       <ul className="sidebar-nav">
-        {NAV.map((item) => (
-          <li key={item.to}>
-            <NavLink to={item.to} end={item.end} onClick={onNavigate} title={collapsed ? item.label : undefined}>
-              <i className={`fa-solid ${item.icon}`} aria-hidden="true" />
-              <span className="sidebar-label">{item.label}</span>
-            </NavLink>
-          </li>
-        ))}
+        {NAV.map((item) => {
+          const label = item.count === 'compare' ? `${item.label} (${compareIds.length})` : item.label
+          return (
+            <li key={item.to}>
+              <NavLink to={item.to} end={item.end} onClick={onNavigate} title={collapsed ? label : undefined}>
+                <i className={`fa-solid ${item.icon}`} aria-hidden="true" />
+                <span className="sidebar-label">{label}</span>
+              </NavLink>
+            </li>
+          )
+        })}
       </ul>
     </nav>
   )

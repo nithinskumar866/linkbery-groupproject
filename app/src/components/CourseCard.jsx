@@ -4,11 +4,18 @@ import RatingStars from './RatingStars.jsx'
 import SkillChip from './SkillChip.jsx'
 import PriceBadge from './PriceBadge.jsx'
 import SaveButton from './SaveButton.jsx'
+import CompareButton from './CompareButton.jsx'
+import { StatusBadge } from './ProgressStatus.jsx'
+import { useAuth } from '../hooks/useAuth.js'
+import { useProgress } from '../hooks/useProgress.js'
 
 const MAX_SKILLS = 3
 
 export default function CourseCard({ course }) {
+  const { user } = useAuth()
+  const { getStatus } = useProgress()
   if (!course) return null
+  const status = user ? getStatus(course.id) : null
   const { id, title, provider, platform, level, type, duration, rating, reviewCount, price } = course
   const skills = Array.isArray(course.skills) ? course.skills : []
   const extra = skills.length - MAX_SKILLS
@@ -46,6 +53,11 @@ export default function CourseCard({ course }) {
       </ul>
 
       <RatingStars rating={rating} reviewCount={reviewCount} size="sm" />
+      {status && (
+        <div className="course-card-status">
+          <StatusBadge status={status} />
+        </div>
+      )}
 
       {skills.length > 0 && (
         <ul className="chip-list course-card-skills" aria-label="Skills">
@@ -64,6 +76,7 @@ export default function CourseCard({ course }) {
 
       <div className="course-card-footer">
         <PriceBadge price={price} />
+        <CompareButton courseId={id} courseTitle={title} />
         <Link className="course-card-link" to={href} aria-label={`View details: ${title}`}>
           Details <i className="fa-solid fa-arrow-right" aria-hidden="true" />
         </Link>

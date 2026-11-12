@@ -34,7 +34,9 @@ describe('data shape', () => {
     const names = new Set(getPlatforms().map((p) => p.name))
     for (const c of all) expect(names.has(c.platform)).toBe(true)
     expect(getPlatforms().find((p) => p.name === 'Coursera')).toMatchObject({ slug: 'coursera', logo: '/images/c.jpg' })
-    expect(getPlatforms().find((p) => p.name === 'YouTube')?.logo).toBeNull()
+    expect(getPlatforms().find((p) => p.name === 'YouTube')?.logo).toBe('/images/platforms/youtube.svg')
+    expect(getPlatforms().find((p) => p.name === 'Khan Academy')?.logo).toBe('/images/platforms/khan-academy.svg')
+    expect(getPlatforms().find((p) => p.name === 'fast.ai')?.logo).toBe('/images/platforms/fastai.svg')
   })
 
   it('getAllSkills is sorted by count desc and stable', () => {

@@ -13,6 +13,7 @@ const APP = resolve(here, '..')
 const CSV_PATH = resolve(APP, '../linkbery.csv')
 const SAMPLE_PATH = resolve(here, 'sample-courses.json')
 const OUT_PATH = resolve(APP, 'src/data/courses.json')
+const PATHS_PATH = resolve(APP, 'src/data/paths.json')
 
 export const CATEGORY_SLUGS = [
   'development', 'coding', 'ui-ux', 'data-science', 'ai-ml', 'cybersecurity', 'cloud', 'math', 'software', 'science',
@@ -264,17 +265,22 @@ const LEGACY_COURSES = [
     image: '/images/sql_c.jpg',
   },
   {
+    // The legacy site linked to the Zen Class UI/UX bootcamp
+    // (guvi.in/zen-class/ui-ux-design-course/), which GUVI discontinued: the URL
+    // now redirects to a generic course listing. This is GUVI's current English
+    // UI/UX course from that listing (checked 2026-11-12: 8 hours, paid, beginner).
+    // The id is kept so existing links, saved lists and progress keep working.
     id: 'guvi-ui-ux-design-course',
-    title: 'UI/UX Design Course (Zen Class)',
+    title: 'UX Design Fundamentals',
     provider: 'HCL GUVI',
     platform: 'Guvi',
-    url: 'https://www.guvi.in/zen-class/ui-ux-design-course/',
-    description: 'A mentor-led UI/UX design program covering research, wireframing and prototyping in Figma.',
-    skills: ['User Experience Design', 'User Research', 'Figma', 'Prototyping', 'Visual Design'],
+    url: 'https://www.guvi.in/courses/ui-ux/ux-design-fundamentals/',
+    description: 'A self-paced beginner course on UX principles, user research, personas, wireframing in Figma and usability testing.',
+    skills: ['User Experience Design', 'User Research', 'Design Thinking', 'Wireframing', 'Figma', 'Usability Testing'],
     categories: ['ui-ux', 'design'],
     level: 'Beginner',
-    type: 'Bootcamp',
-    duration: null,
+    type: 'Course',
+    duration: '8 Hours',
     rating: null,
     reviewCount: null,
     price: 'Paid',
@@ -367,6 +373,55 @@ export function validate(courses) {
 }
 
 // ---------------------------------------------------------------------------
+// Learning paths (src/data/paths.json, CONTRACT.md section 11)
+// ---------------------------------------------------------------------------
+const PATH_FIELDS = ['id', 'title', 'description', 'goal', 'level', 'categories', 'icon', 'steps']
+const STEP_FIELDS = ['courseId', 'title', 'note', 'optional']
+const PATH_LEVELS = ['Beginner', 'Intermediate', 'Advanced']
+
+/** Returns a list of error strings; empty when every path is valid. */
+export function validatePaths(paths, courseIds) {
+  const errors = []
+  const known = new Set(courseIds)
+  if (!Array.isArray(paths)) return ['paths.json must be an array']
+  if (paths.length < 6 || paths.length > 8) errors.push(`expected 6-8 paths, found ${paths.length}`)
+  const ids = new Set()
+  for (const p of paths) {
+    const at = `path "${p?.id ?? '?'}"`
+    for (const f of PATH_FIELDS) if (!(f in p)) errors.push(`${at}: missing field "${f}"`)
+    for (const f of Object.keys(p)) if (!PATH_FIELDS.includes(f)) errors.push(`${at}: unknown field "${f}"`)
+    if (typeof p.id !== 'string' || !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(p.id)) errors.push(`${at}: id must be kebab-case`)
+    if (ids.has(p.id)) errors.push(`${at}: duplicate path id`)
+    ids.add(p.id)
+    for (const f of ['title', 'description', 'goal', 'icon']) {
+      if (typeof p[f] !== 'string' || !p[f].trim()) errors.push(`${at}: "${f}" must be a non-empty string`)
+    }
+    if (typeof p.icon === 'string' && !p.icon.startsWith('fa-')) errors.push(`${at}: icon must be a Font Awesome class like "fa-code"`)
+    if (!PATH_LEVELS.includes(p.level)) errors.push(`${at}: invalid level "${p.level}"`)
+    if (!Array.isArray(p.categories) || !p.categories.length) errors.push(`${at}: needs at least one category`)
+    else for (const k of p.categories) if (!CATEGORY_SLUGS.includes(k)) errors.push(`${at}: unknown category "${k}"`)
+    if (!Array.isArray(p.steps)) {
+      errors.push(`${at}: steps must be an array`)
+      continue
+    }
+    if (p.steps.length < 4 || p.steps.length > 6) errors.push(`${at}: expected 4-6 steps, found ${p.steps.length}`)
+    if (!p.steps.some((s) => s.optional === false)) errors.push(`${at}: needs at least one required step`)
+    const stepCourses = new Set()
+    p.steps.forEach((s, i) => {
+      const sat = `${at} step ${i + 1}`
+      for (const f of STEP_FIELDS) if (!(f in s)) errors.push(`${sat}: missing field "${f}"`)
+      for (const f of Object.keys(s)) if (!STEP_FIELDS.includes(f)) errors.push(`${sat}: unknown field "${f}"`)
+      if (!known.has(s.courseId)) errors.push(`${sat}: unknown courseId "${s.courseId}"`)
+      if (stepCourses.has(s.courseId)) errors.push(`${sat}: course "${s.courseId}" appears twice in this path`)
+      stepCourses.add(s.courseId)
+      for (const f of ['title', 'note']) if (typeof s[f] !== 'string' || !s[f].trim()) errors.push(`${sat}: "${f}" must be a non-empty string`)
+      if (typeof s.optional !== 'boolean') errors.push(`${sat}: optional must be true or false`)
+    })
+  }
+  return errors
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 function main() {
@@ -403,6 +458,9 @@ function main() {
   }
 
   const errors = validate(all)
+  // Paths reference course ids, so they are checked against the freshly built data.
+  const paths = existsSync(PATHS_PATH) ? JSON.parse(readFileSync(PATHS_PATH, 'utf8')) : []
+  errors.push(...validatePaths(paths, all.map((c) => c.id)).map((e) => `paths.json: ${e}`))
   log.forEach((l) => console.log(`  note: ${l}`))
   if (errors.length) {
     console.error(`\n${errors.length} validation error(s):`)
@@ -422,6 +480,7 @@ function main() {
   console.log('  by source:  ', count('source'))
   console.log('  by platform:', count('platform'))
   console.log('  by category:', count('categories'))
+  console.log(`  paths:       ${paths.length} learning paths validated`)
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main()

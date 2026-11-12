@@ -43,6 +43,24 @@ export function writeFilters(f) {
   return sp
 }
 
+/**
+ * URL filters -> the exact option object `searchCourses` / `getFacetCounts` take
+ * (CONTRACT §3/§9). The URL uses `q`; the lib uses `query`. Only contract keys are
+ * passed so the lib's unknown-key warning stays quiet.
+ */
+export function toSearchOptions(f, { fixedCategory } = {}) {
+  return {
+    query: f.q || '',
+    categories: fixedCategory ? [fixedCategory] : f.categories,
+    skills: f.skills,
+    levels: f.levels,
+    platforms: f.platforms,
+    minRating: f.minRating,
+    price: f.price,
+    sort: f.sort,
+  }
+}
+
 /** Number of active filters (not counting the text query or sort). */
 export function countActive(f, { ignoreCategories = false } = {}) {
   let n = 0
