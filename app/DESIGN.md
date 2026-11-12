@@ -6,10 +6,9 @@ real course thumbnails, a proper header with search and "Join for free", grey
 section bands and a full footer. It should feel like a real company's product,
 trustworthy and calm. Not playful, not a dev tool, not a template.
 
-**Reference mockups** (approved by the user; match their look closely):
-`C:\Users\satya\AppData\Local\Temp\claude\54060be9612e31c8\363bd277-a879-48b3-a503-a245e073e263\scratchpad\canvas\project\`
-`Home.dc.html`, `Listing.dc.html` and `Detail.dc.html`. They use inline styles; read them for layout,
-spacing, sizes and copy. `/_blob/...` image URLs in them correspond to `/images/...` files in `public/`.
+**Reference screens:** the home page, the courses listing and the course page are the
+canonical examples of this style. New pages should reuse their header band, card, list
+result and side-card patterns rather than inventing new ones.
 
 Tokens live in `src/styles/tokens.css`. **Use only those variables.** Light is
 the default theme; dark is optional via the header toggle (`linkbery.theme`).
