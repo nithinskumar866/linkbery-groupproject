@@ -26,7 +26,8 @@ content; every "Go to course" button links out to the provider.
   per platform.
 - **Accounts**: register, log in, save courses, and edit your profile (name, email,
   photo, password).
-- Light and dark theme, collapsible sidebar, works on phones down to 360px wide.
+- **Quick search**: press Ctrl+K (or `/`) anywhere to jump to a course, path or page.
+- Light theme (default) and dark theme; works on phones down to 360px wide.
 
 > **Demo login: data stays in this browser.** Linkbery has no server. Accounts,
 > hashed passwords, saved courses and progress are stored in your browser's
@@ -82,13 +83,15 @@ Add an object to `src/data/paths.json` (schema in `CONTRACT.md` §11):
 ```
 
 Steps must use existing course ids. Optional steps don't count towards progress.
-`icon` is any Font Awesome solid icon class.
+The path's icon comes from its first category; the `icon` field is kept for
+compatibility but not displayed.
 
 ## Project structure
 
 ```
 app/
 ├── CONTRACT.md            shared API contract between the data and UI layers
+├── DESIGN.md              visual design rules for the interface
 ├── index.html
 ├── public/                static files: images, platform logos, _redirects (Netlify)
 ├── vercel.json            SPA rewrite for Vercel
@@ -97,9 +100,9 @@ app/
     ├── data/              courses.json, paths.json (generated / hand-written data)
     ├── lib/               pure data + storage logic: courses, auth, saved, compare, paths, progress
     ├── hooks/             React hooks over lib/ (useAuth, useSaved, useCompare, useProgress)
-    ├── components/        reusable UI (CourseCard, FilterPanel, CompareTray, PathCard, ...)
+    ├── components/        reusable UI (Header, CourseCard, CourseResult, FilterPanel, CompareTray, ...)
     ├── pages/             one component per route
-    ├── styles/            layout, components, pages, features CSS
+    ├── styles/            tokens (colours, type, spacing), layout, components and pages CSS
     ├── App.jsx            routes
     └── main.jsx           entry point
 ```
