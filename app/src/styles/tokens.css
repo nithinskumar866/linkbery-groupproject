@@ -1,109 +1,133 @@
 /*
- * Linkbery design tokens. The single source of truth for colour, type, spacing
- * and radius. Dark is the default theme; light is opt-in via
- * <html data-theme="light">. See DESIGN.md before changing anything here.
+ * Linkbery design tokens: professional light theme (default) and a navy dark
+ * theme (opt-in via <html data-theme="dark">). See DESIGN.md before changing.
  */
 
 :root,
-:root[data-theme='dark'] {
-  color-scheme: dark;
-
-  /* Surfaces: flat, layered by lightness, never by shadow */
-  --bg: #09090b;
-  --bg-subtle: #0e0e11;
-  --surface: #121215;
-  --surface-hover: #18181c;
-  --surface-active: #1e1e23;
-  --overlay: rgba(0, 0, 0, 0.6);
-
-  /* Lines */
-  --border: #222227;
-  --border-strong: #303037;
-  --border-focus: #ff5c8a;
-
-  /* Text */
-  --text: #ededef;
-  --text-2: #a0a0a9;
-  --text-3: #6c6c75;
-  --text-inverse: #09090b;
-
-  /* Brand: one sharp "berry" accent, used sparingly */
-  --accent: #ff5c8a;
-  --accent-hover: #ff7aa0;
-  --accent-subtle: rgba(255, 92, 138, 0.12);
-  --accent-text: #ff8fae;
-  --on-accent: #0b0b0d;
-
-  /* Status */
-  --green: #4ade80;
-  --green-subtle: rgba(74, 222, 128, 0.12);
-  --amber: #fbbf24;
-  --amber-subtle: rgba(251, 191, 36, 0.12);
-  --red: #f87171;
-  --red-subtle: rgba(248, 113, 113, 0.12);
-  --blue: #60a5fa;
-  --blue-subtle: rgba(96, 165, 250, 0.12);
-
-  /* Only floating layers (menus, palette, toasts) get a shadow */
-  --shadow-pop: 0 0 0 1px var(--border-strong), 0 16px 48px rgba(0, 0, 0, 0.55);
-}
-
 :root[data-theme='light'] {
   color-scheme: light;
 
-  --bg: #fafafa;
-  --bg-subtle: #f4f4f5;
-  --surface: #ffffff;
-  --surface-hover: #f4f4f5;
-  --surface-active: #ececee;
-  --overlay: rgba(9, 9, 11, 0.4);
+  /* Surfaces */
+  --bg: #ffffff;
+  --bg-soft: #f6f7fa;      /* page bands, section backgrounds */
+  --surface: #ffffff;      /* cards, panels */
+  --surface-hover: #f8f9fb;
+  --chip: #f1f3f7;         /* skill tags, quiet fills */
+  --overlay: rgba(14, 26, 53, 0.45);
 
-  --border: #e4e4e7;
-  --border-strong: #d4d4d8;
-  --border-focus: #d6336c;
+  /* Lines */
+  --border: #e3e6ed;
+  --border-soft: #eef0f4;
+  --border-input: #c9ceda;
 
-  --text: #09090b;
-  --text-2: #52525b;
-  --text-3: #8b8b94;
-  --text-inverse: #fafafa;
+  /* Text */
+  --text: #0e1a35;         /* navy ink */
+  --text-2: #3f4a63;       /* body secondary */
+  --text-3: #5b6478;       /* meta, labels */
+  --text-disabled: #9aa1b2;
 
-  --accent: #d6336c;
-  --accent-hover: #c02659;
-  --accent-subtle: rgba(214, 51, 108, 0.09);
-  --accent-text: #be2a5f;
-  --on-accent: #ffffff;
+  /* Brand */
+  --brand: #b0124a;
+  --brand-hover: #950e3e;
+  --brand-tint: #fbe8ef;
+  --on-brand: #ffffff;
 
-  --green: #16a34a;
-  --green-subtle: rgba(22, 163, 74, 0.1);
-  --amber: #b45309;
-  --amber-subtle: rgba(180, 83, 9, 0.1);
-  --red: #dc2626;
-  --red-subtle: rgba(220, 38, 38, 0.09);
-  --blue: #2563eb;
-  --blue-subtle: rgba(37, 99, 235, 0.09);
+  /* Navy bands (hero on course page, stats band, footer) */
+  --navy: #0e1a35;
+  --navy-2: #1c2a4d;
+  --navy-line: #26345a;
+  --on-navy: #ffffff;
+  --on-navy-2: #b9c1d6;
+  --on-navy-3: #dce2f0;
 
-  --shadow-pop: 0 0 0 1px var(--border), 0 12px 32px rgba(9, 9, 11, 0.12);
+  /* Status */
+  --star: #c27c0e;
+  --star-on-navy: #ffd27a;
+  --green: #0b6b43;
+  --green-tint: #e3f7ec;
+  --blue: #1f4bd8;
+  --blue-tint: #e6eeff;
+  --amber: #8a5300;
+  --amber-tint: #fff4dc;
+  --red: #b42318;
+  --red-tint: #fdecea;
+
+  /* Fallback thumbnail tiles (by category group) */
+  --tile-1: #1e3a8a;
+  --tile-2: #0f5132;
+  --tile-3: #7c2d12;
+  --tile-4: #4c1d95;
+  --tile-5: #155e75;
+  --tile-6: #831843;
+
+  /* Elevation */
+  --shadow-sm: 0 1px 2px rgba(14, 26, 53, 0.06);
+  --shadow-md: 0 6px 18px rgba(14, 26, 53, 0.08);
+  --shadow-lg: 0 12px 32px rgba(14, 26, 53, 0.12);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #0b1428;
+  --bg-soft: #0f1a33;
+  --surface: #121f3b;
+  --surface-hover: #172647;
+  --chip: #1b2a4c;
+  --overlay: rgba(0, 0, 0, 0.6);
+
+  --border: #22325a;
+  --border-soft: #1c2b4f;
+  --border-input: #33456f;
+
+  --text: #eef1f8;
+  --text-2: #c3cbdd;
+  --text-3: #98a3bd;
+  --text-disabled: #66718c;
+
+  --brand: #f0507e;
+  --brand-hover: #ff6b93;
+  --brand-tint: rgba(240, 80, 126, 0.14);
+  --on-brand: #ffffff;
+
+  --navy: #070e1f;
+  --navy-2: #0f1a33;
+  --navy-line: #22325a;
+
+  --star: #ffc24d;
+  --green: #4ade80;
+  --green-tint: rgba(74, 222, 128, 0.12);
+  --blue: #7aa2ff;
+  --blue-tint: rgba(122, 162, 255, 0.14);
+  --amber: #fbbf24;
+  --amber-tint: rgba(251, 191, 36, 0.12);
+  --red: #f87171;
+  --red-tint: rgba(248, 113, 113, 0.12);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.45);
 }
 
 :root {
-  /* Type */
-  --font-sans: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono: 'Geist Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
+  --font: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 
-  --text-xs: 0.75rem;   /* 12 meta, kbd, labels */
-  --text-sm: 0.8125rem; /* 13 secondary UI */
-  --text-base: 0.875rem;/* 14 body + controls */
-  --text-md: 1rem;      /* 16 card titles */
-  --text-lg: 1.25rem;   /* 20 section titles */
-  --text-xl: 1.75rem;   /* 28 page titles */
-  --text-2xl: 2.75rem;  /* 44 home hero only */
+  --text-xs: 0.75rem;     /* 12 */
+  --text-sm: 0.8125rem;   /* 13 */
+  --text-base: 0.9375rem; /* 15 body */
+  --text-md: 1rem;        /* 16 */
+  --text-lg: 1.1875rem;   /* 19 card titles */
+  --text-xl: 1.375rem;    /* 22 section h2 inside pages */
+  --text-2xl: 2rem;       /* 32 section headings */
+  --text-3xl: 2.25rem;    /* 36 page titles */
+  --text-4xl: 2.75rem;    /* 44 course title */
+  --text-hero: 3.375rem;  /* 54 home hero */
 
-  --leading-tight: 1.15;
-  --leading: 1.5;
-  --tracking-tight: -0.022em;
-  --tracking-label: 0.04em;
+  --leading: 1.55;
+  --leading-tight: 1.1;
+  --tracking-tight: -0.025em;
+  --tracking-label: 0.06em;
 
-  /* Spacing: 4px grid */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -113,20 +137,21 @@
   --space-8: 32px;
   --space-10: 40px;
   --space-12: 48px;
+  --space-14: 56px;
   --space-16: 64px;
+  --space-18: 72px;
 
-  /* Radius: small and consistent; nothing pill-shaped except status dots */
-  --radius-sm: 4px;
-  --radius: 6px;
-  --radius-lg: 10px;
+  --radius-sm: 6px;   /* tags */
+  --radius: 8px;      /* buttons, inputs */
+  --radius-lg: 12px;  /* cards */
+  --radius-xl: 16px;  /* big panels, CTA box */
+  --radius-pill: 999px; /* header search, topic tabs, filter chips */
 
-  /* Layout */
-  --topbar-h: 52px;
-  --content-max: 1200px;
-  --filters-w: 232px;
+  --header-h: 72px;
+  --content-max: 1280px;
+  --gutter: 32px;
+  --filters-w: 260px;
 
-  /* Motion */
   --ease: cubic-bezier(0.2, 0, 0, 1);
-  --dur-fast: 90ms;
   --dur: 160ms;
 }

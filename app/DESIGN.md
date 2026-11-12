@@ -1,135 +1,105 @@
-# Linkbery design spec
+# Linkbery design spec (v3: professional site)
 
-**Direction:** a dark, precise product UI in the family of Linear, Raycast and
-Vercel. It is a tool for finding courses quickly, not a marketing page. Every
-pixel should look intentional. When unsure, remove decoration rather than add it.
+**Direction:** a professional online-learning website in the family of large,
+established course platforms: white pages, navy ink, one berry brand colour,
+real course thumbnails, a proper header with search and "Join for free", grey
+section bands and a full footer. It should feel like a real company's product,
+trustworthy and calm. Not playful, not a dev tool, not a template.
 
-Tokens live in `src/styles/tokens.css`. **Use only those variables**: no new
-hex colours, font sizes or radii in component or page CSS.
+**Reference mockups** (approved by the user; match their look closely):
+`C:\Users\satya\AppData\Local\Temp\claude\54060be9612e31c8\363bd277-a879-48b3-a503-a245e073e263\scratchpad\canvas\project\`
+`Home.dc.html`, `Listing.dc.html` and `Detail.dc.html`. They use inline styles; read them for layout,
+spacing, sizes and copy. `/_blob/...` image URLs in them correspond to `/images/...` files in `public/`.
 
-## Non-negotiables (the "anti-template" rules)
+Tokens live in `src/styles/tokens.css`. **Use only those variables.** Light is
+the default theme; dark is optional via the header toggle (`linkbery.theme`).
 
-1. **No gradients, glows, blurred blobs, glassmorphism or emoji** anywhere.
-2. **No drop shadows on cards or sections.** Depth comes from `--surface`
-   vs `--bg` and 1px `--border`. Only floating layers (menus, the command palette,
-   toasts, the compare tray) use `--shadow-pop`.
-3. **Radius ≤ `--radius-lg` (10px).** No pill buttons and no pill chips. Chips/tags use
-   `--radius-sm`.
-4. **One accent colour** (`--accent`, berry). Use it for the primary action on a
-   screen, active nav, focus rings, selected states and key data. Never as a large
-   background fill. Status colours are only for status.
-5. **Typography carries the hierarchy, not colour or boxes.** Use Geist for UI
-   and Geist Mono for numbers, counts, ratings, durations, kbd hints, ids and
-   section labels. Headings use `--tracking-tight` and weight 600. Never 800/900.
-6. **Icons:** `lucide-react` only, 16px (`size={16}`), `strokeWidth={1.75}`, coloured
-   `--text-3` unless active. **Font Awesome is removed**: no `fa-*` classes
-   anywhere, and the CDN link is gone. Category icons map slug → Lucide
-   component in a single helper (`src/components/icons.js`).
-7. **Density:** 14px body, 32px control height (`.btn`, inputs), 8px base gaps. Lists
-   beat card grids. Show more information per screen with less chrome.
-8. **Copy:** sentence case everywhere, short and specific. No "Unlock your potential",
-   no exclamation marks, no marketing filler. Numbers are real (from `getOverallStats`).
-9. **Motion:** only opacity/transform/background transitions at `--dur` /
-   `--dur-fast` with `--ease`. Respect `prefers-reduced-motion`.
-10. **Both themes** must work: dark is the default, light via the toggle
-    (`<html data-theme>`, localStorage `linkbery.theme`, default `dark` when unset).
+## Rules
+
+1. **Type:** Plus Jakarta Sans everywhere (400–800). Headings weight 800 with
+   `--tracking-tight`; body 15px / 1.55. Use `font-variant-numeric: tabular-nums` for counts.
+2. **Colour:** text `--text`, secondary `--text-2`, meta `--text-3`. The brand colour is only for
+   primary buttons, links in body copy, active states and small highlights. Navy (`--navy`)
+   is used for the course-page hero, the stats band and the footer.
+3. **Shape:** buttons and inputs `--radius` (8px), cards `--radius-lg` (12px), big panels `--radius-xl`.
+   **Pills** (`--radius-pill`) only for the header search, topic tabs, filter chips and badges.
+4. **Depth:** cards have a 1px `--border`, `--shadow-sm` at rest and `--shadow-md` on hover. The
+   course-page side card uses `--shadow-lg`. No gradients, glows or emoji.
+5. **Icons:** `lucide-react` (already installed), 18px in the UI, stroke 2.
+6. **Copy:** sentence case, plain and specific. Real numbers only (from the lib).
+7. **Layout:** content max `--content-max` (1280px) with `--gutter` side padding (16px on phones).
+   Sections are separated by `--bg-soft` bands with top/bottom `--border`, 56–72px vertical padding.
+8. **Responsive:** everything works at 360px with no horizontal page scroll; the header collapses to
+   logo + search icon + menu button; filters become a slide-over sheet.
+9. **Accessibility:** real buttons/links/labels, visible focus ring (2px `--brand`, offset 2px),
+   aria on menus/tabs/dialogs, 4.5:1 text contrast in both themes.
 
 ## App shell
 
-- **Top bar** (`--topbar-h`, sticky, `--bg` with bottom `--border`): logo wordmark
-  "linkbery" (lowercase, weight 600, small berry square mark before it), primary
-  nav (Courses, Paths, Recommend, Insights), then on the right: a search trigger
-  showing `Search courses…  Ctrl K`, a theme toggle icon button, the compare
-  indicator (`Compare 2`, only when there are items) and the user menu (avatar
-  initials, 24px) or `Log in`.
-- **No persistent left sidebar.** Under 768px the nav collapses into a menu button
-  that opens a full-height sheet.
-- **Command palette (Ctrl/Cmd+K and `/`):** a centred modal (max 640px) with an input
-  and a keyboard-navigable result list. It searches courses with `searchCourses({ query })`
-  (top 8) plus pages and paths, using ↑↓ Enter Esc. This is the main way to search.
-- Content is centred at `--content-max` with `--space-6` side padding (`--space-4`
-  on mobile). Footer: one muted line with a few links.
-
-## Core primitives (class names both layers use)
-
-| Class | Use |
-|---|---|
-| `.btn` `.btn-primary` `.btn-ghost` `.btn-danger` `.btn-sm` `.btn-icon` | 32px buttons (28px for `-sm`). Primary = accent fill + `--on-accent` text. Default = `--surface` + border. Ghost = transparent. |
-| `.input` `.select` `.textarea` `.field` `.field-label` `.field-hint` `.field-error` | Form controls: 32px, `--bg-subtle` fill, border, accent focus ring |
-| `.tag` | Small skill/meta label: mono 12px, `--radius-sm`, border, no fill |
-| `.badge` `.badge-green` `.badge-amber` `.badge-red` `.badge-blue` `.badge-accent` | Status: a subtle fill and coloured text |
-| `.kbd` | Keyboard hint: mono 11px, border, `--radius-sm` |
-| `.panel` | `--surface` box with border and `--radius-lg`; padding `--space-5` |
-| `.section-label` | Mono 12px uppercase `--tracking-label` `--text-3`, e.g. "COURSES · 84" |
-| `.page-head` `.page-title` `.page-desc` | Page header: 28px title and a 14px `--text-2` description, left aligned |
-| `.divider` | 1px `--border` rule |
-| `.meter` `.meter-fill` | A 4px progress/score bar, accent fill |
-| `.empty` | Empty state: centred icon (24px, `--text-3`), title and a one-line hint |
-| `.skeleton` | Optional loading shimmer (opacity pulse only) |
+- **Header** (white, bottom border, `--header-h`): logo (berry rounded square mark with two
+  white circles + "Linkbery" 800 weight), **Explore** button opening a categories menu (two
+  columns: Technical / Non-technical with counts, plus "All courses" and "Learning paths"),
+  a pill search field (submits to `/search?q=`; Ctrl/Cmd+K or `/` opens the command palette),
+  nav links (Learning paths, Compare (n), Insights), then **Log in** (brand text) and
+  **Join for free** (brand button), or the user menu (avatar + name) when logged in.
+  A small theme toggle icon button sits before Log in.
+- **Footer** (navy): brand blurb + three link columns (Explore, Categories, Linkbery) and a bottom
+  line "© 2026 Linkbery · Course details come from each provider and may change."
+- **Page header band** (for inner pages): `--bg-soft` band with breadcrumb, 36px title and a
+  one-line description, like the Listing mockup.
+- **Command palette:** keep the existing behaviour, restyled light (white panel, `--shadow-lg`).
+- **Compare tray:** white bar fixed at the bottom with a top border and `--shadow-lg`, course
+  chips, "Clear" and a brand "Compare now" button.
+- **Toasts:** white card, `--shadow-lg`, coloured left icon (no coloured borders).
 
 ## Course display
 
-- **CourseRow** (default in lists: courses, search, category, profile): a single
-  dense row with
-  - platform logo 20px
-  - title (`--text`, 14px, weight 500) with `provider · platform` muted below
-  - level · type · duration in mono `--text-3`
-  - rating `4.8` + `140K` in mono (a dash when null)
-  - price badge
-  - action icons (save, compare, status), shown on hover/focus on desktop and always on touch
+- **Thumbnails:** use `course.image` when present (`/images/...`). Otherwise a solid tile using
+  `--tile-1..6` (pick by the course's first category, stable), showing the platform in small
+  uppercase and the title in 800 weight, exactly like the mockups. One shared `CourseThumb` component.
+- **CourseCard** (grid): thumbnail 16:9 on top, then provider · platform (13px, `--text-3`),
+  title (16px 700), rating line (`★ 4.8` in `--star` + review count, or "No rating yet"),
+  meta (type · level), and a footer row with price and "+ Compare". Save is a bookmark icon
+  button over the thumbnail's top-right corner.
+- **CourseResult** (list): the wide horizontal card from the Listing mockup: thumbnail 220px left,
+  details middle (provider, title, description, rating + meta, skill tags), and a right column with
+  price, "View course" (brand) and "+ Compare". Default view on courses/category/search pages.
+- **Price badge:** Free = green tint, Free to audit = blue tint, Paid = neutral text.
 
-  Rows are separated by `--border`, use a `--surface-hover` background on hover, and the whole row is a link.
-- **CourseCard** (compact tile for the home page, related courses and path steps):
-  `.panel` with a smaller padding, platform + title + 2 tags + a rating line. No images,
-  no big thumbnails.
-- **Ratings:** no star icons. Show the number in mono with a small `★` glyph in
-  `--amber` before it.
+## Pages
 
-## Page notes
+- **Home:** as the mockup: grey hero band (54px heading, description, search with category select
+  and popular searches, a 2×2 grid of thumbnail cards), platforms strip, **Popular courses** with
+  topic tabs (working: they filter by category) and 8 cards, three "why Linkbery" points, learning
+  paths (4 cards listing their first 3 steps), navy stats band, sign-up CTA box (hidden when logged in;
+  show "Continue learning" with path progress instead), footer.
+- **Courses / Category / Search:** page header band, left filter column (checkbox groups with counts,
+  "Show more", "Clear all"), toolbar (result count "Showing 1–12 of 84", active filter chips, sort
+  select, list/grid toggle), results, and **pagination** (12 per page, kept in the URL as `page`).
+- **Course detail:** navy hero band (breadcrumb, "Provider · offered on Platform", 44px title,
+  description, rating/level/type/duration), then two columns: main (skills, course details `<dl>`,
+  learning path steps with "You are here", similar courses) and the side card (thumbnail, price,
+  "Go to course on {Platform} ↗", Save, + Compare, progress select, note "You enrol and pay on …").
+- **Compare:** page header band; a clean table with sticky first column, thumbnails in the header
+  cells, "Best" badges, shared skills highlighted green; share link and "Use this list".
+- **Learning paths:** band + grid of path cards (like the home cards, with progress bar when logged in).
+  **Path detail:** band with goal, level, step count and progress; numbered vertical steps, each with
+  a CourseResult-style compact card and a status select.
+- **Recommend:** band with a large goal input + level select + example chips; results as CourseResults
+  with a match bar and the reason.
+- **Insights:** band; stat tiles; horizontal bar charts (courses per platform, average rating) and a
+  platform table.
+- **Login / Register:** centred card (max 440px) on `--bg-soft`, logo on top, the demo note as an
+  amber-tint notice. **Profile:** header card (avatar, name, email, member since, Edit profile, Log out)
+  and tabs (Saved · Planning · In progress · Completed · Paths) with counts.
+  **Edit profile:** card form with avatar upload and change password.
+- **About / Contact / 404:** band + readable text column; contact form in a card.
 
-- **Home:**
-  - Left-aligned hero: a 44px heading of max 2 lines, e.g. "Every good course, one search away.", a muted line, a large search field that opens the palette, and a row of real stats in mono (`84 courses · 9 platforms · 221 skills`).
-  - Then "Browse by category" as a tight list/grid of text links with Lucide icons and counts, "Learning paths" (3 rows), and "Top rated" (5 CourseRows).
-- **Courses / category / search:** the filters are a left column (`--filters-w`) of
-  collapsible groups with checkbox rows and mono counts; on mobile they open as a
-  sheet. The toolbar has the result count, active filter tags (removable) and a sort select.
-- **Course detail:** two columns: main content (title, meta line, description, skills
-  as tags, "Part of these paths"), and a sticky side `.panel` with the primary
-  `Go to course ↗` button, save/compare/status controls and the facts list (mono values).
-- **Compare:** a real table with sticky attribute column, row hover and mono values;
-  the best value gets an accent marker and shared skills a green tag.
-- **Paths:** a list with progress meters; the path detail is a vertical numbered timeline
-  (mono step numbers, a 1px line, a status dot per step).
-- **Insights:** CSS bar charts as thin bars with mono labels; no chart library and no colour per platform.
-- **Recommend:** the input with example prompts as `.tag` buttons; results as CourseRows
-  with a score `.meter` and the reason in muted text.
-- **Auth:** a narrow centred `.panel` (max 380px), the "demo login" note as a quiet
-  `.badge-amber` line, no illustrations.
-- **About/Contact:** plain text pages with a narrow column, no stock SVG illustrations
-  (stop using `about-img.svg`/`contact-img.svg`).
-- **Profile:** a header row (avatar, name, email, member since), then tabs (Saved ·
-  Planning · In progress · Completed · Paths) with mono counts.
+## Component API (keep working)
 
-## Component API the pages rely on (built by the shell/components side)
-
-Existing components keep their current names and props working (CourseCard,
-CourseGrid, PageHeader, EmptyState, FilterPanel, CourseListView, SaveButton,
-CompareButton, ProgressStatus, PathCard, CourseMini, MyLearning, RatingStars,
-PlatformLogo, Avatar, PasswordInput, DemoNotice, ProtectedRoute, Toaster/toast),
-restyled to this spec. New ones:
-
-```jsx
-<CourseRow course={course} extra={node} />   // dense row; `extra` renders under the meta line (e.g. score meter + reason)
-<CourseList courses={list} variant="rows" | "cards" empty={node} />   // rows by default
-import { CategoryIcon, Icon } from '../components/icons.js'
-<CategoryIcon slug="data-science" size={16} />   // Lucide icon for a category slug
-// icons.js also re-exports the Lucide icons used across the app, so pages import icons from one place
-<CommandPalette />                             // mounted once in Layout; open with openPalette() from components/palette.js
-import { openPalette } from '../components/palette.js'
-```
-
-## Accessibility
-
-Keep everything the current UI does: labels, focus-visible rings (2px
-`--border-focus`, offset 2px), aria on menus/tabs/dialogs, palette focus trap,
-and 4.5:1 contrast for body text in both themes.
+Keep existing names and props, restyled: CourseCard, CourseGrid, CourseList, CourseRow (may become
+the list result), CourseListView, FilterPanel, PageHeader, EmptyState, SaveButton, CompareButton,
+CompareTray, ProgressStatus/StatusControl, PathCard, CourseMini, MyLearning, RatingStars, PriceBadge,
+PlatformLogo, Avatar, PasswordInput, DemoNotice, ProtectedRoute, Toaster/toast, CommandPalette/palette,
+icons.js (CategoryIcon, PathIcon). New: `CourseThumb({ course, size })`, `Pagination({ page, pageCount, onChange })`,
+`PageBand({ crumbs, title, desc, children })`, `ExploreMenu`.
