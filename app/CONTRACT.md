@@ -236,3 +236,259 @@ UI: a status selector on the course detail page (and compact on cards), and a pr
 
 ## 13. Routes added
 `/compare`, `/paths`, `/paths/:id`. Sidebar gains "Learning paths" and "Compare (n)".
+
+---
+
+# Round 3 additions
+
+Eight new features: (A) job skill-gap finder with AI, (B) study planner with calendar
+export, (C) public learning profile, (D) student reviews, (E) course notes,
+(F) watchlist + price/free alerts, (G) admin page, (H) installable offline app (PWA).
+English only. Still no database: everything except the AI call is stored in
+`localStorage` on this device, and every page that stores data says so.
+
+**Ownership changes this round.** The data layer also owns `api/**`, `server/**`,
+`vite.config.js`, `vercel.json` and `.env.example`. The interface layer also owns
+`public/manifest.webmanifest`, `public/sw.js` and `public/icons/**`.
+
+Every new store follows the existing pattern (see `saved.js` / `progress.js`):
+- all localStorage keys start with `linkbery.`
+- stable snapshot references (for `useSyncExternalStore`)
+- `subscribeX(listener) => unsubscribe`
+- cross-tab `storage` sync
+- per-user keys re-read when the logged-in user changes
+- guests get empty data, and writes throw `Error("Please log in to ...")` with a friendly message
+
+The integration rule still applies: use the **exact parameter names**, and log dev warnings for unknown option keys.
+
+## 14. Skill-gap finder (`src/lib/skillGap.js`, `src/hooks/useSkillGap.js`, `server/skillGap.js`, `api/skill-gap.js`)
+
+The AI runs on an Ollama server (model `llama3.1:8b`). The browser never sees its URL or key.
+
+**Server** (`server/skillGap.js`: plain ESM, no dependencies, Node 20 `fetch`):
+```js
+handleSkillGap(body, env, fetchImpl = fetch): Promise<{ status: number, json: object }>
+// body: { text: string }   text trimmed, 30–6000 chars, else 400 { error }
+// env:  { OLLAMA_URL, OLLAMA_MODEL = "llama3.1:8b", OLLAMA_API_KEY? }   OLLAMA_URL missing -> 503 { error }
+// Calls POST `${OLLAMA_URL}/api/chat` { model, stream:false, format:"json", options:{temperature:0}, messages }
+//   with Authorization: Bearer <OLLAMA_API_KEY> only when set; 25 s timeout (AbortController).
+// Validates the model output. Success -> 200 { role: string|null, skills: [{ name, importance: "required"|"nice" }] }
+//   (max 40 skills, names trimmed to <= 60 chars, de-duplicated case-insensitively)
+// Ollama error / timeout / unparseable output -> 502 { error: "The AI service did not respond." }
+```
+- `api/skill-gap.js`: a Vercel Node function (POST only, 405 otherwise) that wraps `handleSkillGap(req.body, process.env)`. It sets `export const config = { maxDuration: 30 }`.
+- `vite.config.js`: a dev-only middleware serves `POST /api/skill-gap` through the same handler, with env from `loadEnv(mode, process.cwd(), '')`, so `.env.local` works locally.
+- `vercel.json`: the SPA rewrite must exclude `/api/`.
+- `.env.example` documents the three variables.
+
+**Client** (`src/lib/skillGap.js`):
+```js
+matchSkill(name): string | null
+// Maps any skill name to a Linkbery skill from getAllSkills(). Case- and punctuation-insensitive,
+// plus a synonym table (js -> JavaScript, ml -> Machine Learning, "python (pandas)" -> Python, ...). null if none.
+extractSkillsBasic(text): { role: string|null, skills: [{ name, importance }] }   // local keyword matching, no network
+analyzeJob(text, { haveSkills = [], signal, timeoutMs = 20000 } = {}): Promise<SkillGapResult>
+// Throws Error("Paste at least a few sentences of the job description.") under 30 chars,
+// and Error("That job description is too long (max 6000 characters).") over 6000.
+// Tries POST /api/skill-gap. On a network error, non-200 response or timeout, falls back to extractSkillsBasic.
+SkillGapResult = {
+  source: "ai" | "basic",
+  notice: string | null,      // "The AI service is unavailable right now, so this uses basic skill matching." after a fallback
+  role: string | null,
+  skills: [{ name, importance: "required"|"nice", matched: string|null, have: boolean }],
+  have: string[],             // matched skills the user already has
+  missing: string[],          // matched skills the user lacks, required first
+  unmatched: string[],        // job skills that no Linkbery course covers
+  courses: [{ course: Course, covers: string[] }]   // up to 6: greedy cover of `missing` (required weighted x2), ties broken by rating
+}
+getUserSkills(progressMap): string[]   // skills from completed courses (pure)
+useSkillGap(): { analyze(text, { haveSkills }), result, loading, error, reset }   // aborts the in-flight request on a new call or unmount
+```
+Route `/skill-gap`: a textarea plus optional "Skills I already have" chips. Results are grouped into Have, Missing and Not covered, followed by a course list and an AI/basic badge.
+
+## 15. Study planner (`src/lib/planner.js`, `src/hooks/usePlans.js`)
+
+```js
+estimateHours(course): { hours: number, basis: string }
+// From duration: "Less Than 2 Hours" -> 2, "N Hours" -> N, "1 - 4 Weeks" -> 25, "1 - 3 Months" -> 85,
+//   "3 - 6 Months" -> 190 (providers assume about 10 h/week).
+// No duration -> by type: Guided Project 2, Video Series 6, Course 20, Specialization 85,
+//   Professional Certificate 190, Bootcamp 300.
+// basis is a plain sentence, e.g. "Estimated from “1 - 3 Months” at about 10 hours a week".
+buildSchedule({ pathId, hoursPerWeek, startDate, includeOptional = false, skipCompleted = true,
+                progressMap = {}, hoursOverride = {} }): Schedule      // pure
+// hoursPerWeek is an integer 1–60 (throws otherwise). startDate is "YYYY-MM-DD" (local date). An unknown path throws.
+// Courses are scheduled in step order, back to back, filling each week to hoursPerWeek. A course can span weeks.
+Schedule = {
+  pathId, hoursPerWeek, startDate, endDate,          // endDate = last study day "YYYY-MM-DD"
+  totalHours, weekCount,
+  items: [{ courseId, title /* step title */, hours, estimated: boolean, startDate, endDate, weekStart, weekEnd }],
+  weeks: [{ index /* 1-based */, start, end, hours, items: [{ courseId, hours }] }],
+  skipped: [courseId]                                  // completed (when skipCompleted) or optional (when excluded)
+}
+buildIcs(schedule, { pathTitle }): string
+// RFC 5545 with CRLF lines: one all-day VEVENT per item (DTEND exclusive),
+// SUMMARY "Study: <course title>", DESCRIPTION with the hours and the course URL, and a stable UID.
+icsFileName(pathId): string                           // "linkbery-<pathId>-plan.ics"
+// Saved plans per user, key linkbery.plans.<userId>:
+getPlans(): { [pathId]: PlanSettings }                // stable reference
+getPlan(pathId): PlanSettings | null
+savePlan(pathId, { hoursPerWeek, startDate, includeOptional, hoursOverride }): PlanSettings   // adds updatedAt
+deletePlan(pathId): void
+subscribePlans(listener)
+usePlans(): { plans, getPlan, savePlan, deletePlan }
+```
+Route `/paths/:id/plan` works for guests as a preview; saving needs a login. The path detail page gets a "Plan my schedule" button.
+
+## 16. Public profile (`src/lib/publicProfile.js`, `src/hooks/usePublicProfile.js`)
+
+There is no server, so a public profile is a **self-contained link**: its data is encoded in the URL.
+```js
+getPublicSettings(): { headline: string, bio: string, show: { completed, inProgress, paths, skills, reviews } }
+// all show flags default to true
+savePublicSettings(partial): settings      // headline <= 80 chars, bio <= 300 chars; key linkbery.public.<userId>
+buildPublicProfile(): ProfilePayload
+// Built from the current user, progress, paths and reviews, following the show flags. Throws when logged out.
+ProfilePayload = { v: 1, name, headline, bio, memberSince /* YYYY-MM */, completed: [courseId], inProgress: [courseId],
+                   paths: [{ id, percent }], skills: [string] /* top 12 from completed */, reviews: [{ courseId, rating, title }] }
+encodeProfile(payload): string              // base64url of UTF-8 JSON; compact keys allowed
+decodeProfile(str): ProfilePayload | null
+// Never throws. Validates types, caps lengths and drops unknown course/path ids.
+getPublicProfileUrl(): string               // "/u/<name-slug>?p=<encoded>" (relative; the UI prefixes the origin)
+subscribePublicSettings(listener)
+usePublicProfile(): { settings, saveSettings, profileUrl }   // profileUrl is recomputed when progress or settings change
+```
+Routes:
+- `/u/:slug` is public. It reads `?p=` and shows "This profile link is incomplete" when decoding fails. The slug is only for looks.
+- `/profile/share` is protected: settings, a preview and a copy-link button.
+
+Avatars are not included in the link; the profile shows initials.
+
+## 17. Reviews (`src/lib/reviews.js`, `src/hooks/useReviews.js`)
+
+A device-wide store, `linkbery.reviews`, shared by all users on this browser. No invented or seed reviews.
+```js
+Review = { id, courseId, userId, userName, rating /* int 1–5 */, title /* <= 100 */, body /* 10–2000 */, createdAt, updatedAt, helpful: [userId] }
+getReviews(courseId, { sort = "newest" } = {}): Review[]
+// sort: newest | helpful | highest | lowest. Stable reference per (course, sort, data).
+getReviewSummary(courseId): { count, average /* 1 decimal */ | null, distribution: { 1..5: n } }
+getMyReview(courseId): Review | null
+saveReview(courseId, { rating, title, body }): Review       // one per user per course (upsert); throws friendly validation errors
+deleteReview(reviewId): void                                 // own reviews only
+toggleHelpful(reviewId): boolean                             // throws on your own review
+getReviewsByUser(userId?): Review[]                          // defaults to the current user
+subscribeReviews(listener)
+useReviews(courseId, { sort }): { reviews, summary, myReview, saveReview, deleteReview, toggleHelpful }
+```
+UI:
+- The course page gets a "Student reviews on Linkbery" section: summary, distribution bars, form and list. It stays separate from the provider rating and notes that reviews are stored in this browser.
+- The profile gets a "Reviews" tab.
+
+## 18. Notes (`src/lib/notes.js`, `src/hooks/useNotes.js`)
+
+Per user, key `linkbery.notes.<userId>`.
+```js
+getAllNotes(): { [courseId]: { text, updatedAt } }   // stable
+getNote(courseId): { text, updatedAt } | null
+setNote(courseId, text): void                       // trimmed; "" deletes; max 5000 chars (throws)
+subscribeNotes(listener)
+useNotes(): { notes, getNote, setNote }
+```
+UI:
+- A "My notes" card on the course page. It saves automatically once typing stops, shows a "Saved" indicator, and shows URLs as links in view mode.
+- A "Notes" tab on the profile.
+
+## 19. Watchlist and alerts (`src/lib/watch.js`, `src/hooks/useWatch.js`, `src/hooks/useNotifications.js`)
+
+Per user:
+- `linkbery.watch.<userId>` = `{ [courseId]: { price, watchedAt } }` (a price snapshot)
+- `linkbery.notifications.<userId>` = Notification[] (newest first, max 50)
+
+```js
+getWatchedIds(): string[]          // stable
+isWatched(courseId): boolean
+toggleWatch(courseId): boolean     // stores the current price as the snapshot
+checkWatchedCourses(): Notification[]
+// Compares snapshots with the current course data, creates notifications for changes, updates the snapshots
+// and returns the new notifications. Runs automatically on module load and whenever the user logs in.
+Notification = { id, type: "now-free" | "price-change" | "course-removed", courseId, courseTitle, from, to, createdAt, read }
+// now-free: the price changed to "Free" or "Free to audit" from something else.
+getNotifications(): Notification[]  // stable
+getUnreadCount(): number
+markRead(id), markAllRead(), clearNotifications()
+subscribeWatch(listener), subscribeNotifications(listener)
+useWatch(): { watchedIds, isWatched, toggleWatch }
+useNotifications(): { notifications, unreadCount, markRead, markAllRead, clearNotifications }
+```
+Course data changes when `npm run data` rebuilds it or when an admin edits a course (section 20). So editing a watched course's price in the admin page and reloading produces an alert; that is the demo loop.
+
+UI:
+- a "Watch price" toggle on the course page
+- a bell with the unread count in the header (logged in only), with a dropdown of the latest 5
+- `/notifications` (protected)
+- a "Watching" tab on the profile
+
+## 20. Admin (`src/lib/admin.js`, `src/hooks/useAdmin.js`; overrides applied in `courses.js` and `paths.js`)
+
+This is a demo admin: any logged-in user can open `/admin`, and the page says that a real site would restrict it to staff.
+
+Edits are stored as overrides in `linkbery.admin.overrides` =
+`{ courses: { upsert: { [id]: Course }, removed: [id] }, paths: { upsert: { [id]: Path }, removed: [id] } }`.
+- `courses.js` and `paths.js` apply the overrides **once at module load**, so derived data stays consistent. Changes therefore take effect after a page reload.
+- Corrupt overrides are ignored and must never crash the app.
+- To avoid a circular import, keep the raw override read in a dependency-free module (e.g. `src/lib/overrides.js`).
+```js
+validateCourse(course): { [field]: message }   // {} when valid; same rules as scripts/build-courses.mjs
+validatePath(path): { [field]: message }
+getAdminCourses(): [{ course, status: "original" | "edited" | "added" | "removed" }]   // includes removed ones
+getAdminPaths():   [{ path,   status: ... }]
+saveCourse(course): void        // throws Error with the first validation message; a new id must be unique kebab-case
+removeCourse(id), restoreCourse(id)
+// restore drops the override: edited or removed goes back to the original; an added course is deleted.
+savePath(path), removePath(id), restorePath(id)
+resetOverrides(): void
+getOverrideCount(): number
+needsReload(): boolean          // true after any change since this page load
+exportCoursesJson(): string     // the merged course list, pretty-printed, ready to replace src/data/courses.json
+exportPathsJson(): string
+importOverrides(jsonString): void   // throws Error on invalid JSON or shape
+subscribeAdmin(listener)
+useAdmin(): { courses, paths, saveCourse, removeCourse, restoreCourse, savePath, removePath, restorePath,
+              resetOverrides, overrideCount, needsReload, exportCoursesJson, exportPathsJson, importOverrides }
+```
+Routes (protected): `/admin` (tabs Courses, Paths and Data), `/admin/courses/new`, `/admin/courses/:id`,
+`/admin/paths/new` and `/admin/paths/:id`. A "Reload to apply changes" banner shows while `needsReload` is true.
+
+## 21. Installable offline app (interface layer)
+
+- `public/manifest.webmanifest`:
+  - name, short_name "Linkbery", start_url "/", display "standalone"
+  - theme and background colours from the tokens
+  - icons `/icons/icon-192.png`, `/icons/icon-512.png`, `/icons/icon-maskable-512.png`
+- `public/sw.js`, with versioned caches:
+  - network-first for navigations, falling back to the cached `/index.html`
+  - cache-first for `/assets/*`
+  - stale-while-revalidate for `/images/*`, `/icons/*` and Google Fonts
+  - **never** caches `/api/*` or non-GET requests
+  - registered from `main.jsx` only when `import.meta.env.PROD`
+- UI:
+  - an "Install app" action (beforeinstallprompt) in the user menu or footer
+  - an offline banner: "You're offline. Saved pages still work; AI skill matching falls back to basic."
+  - an "Update available - Reload" toast when a new service worker is waiting
+
+Course data is bundled with the app, so browsing works offline.
+
+## 22. Routes added in round 3
+
+`*` means login required:
+- `/skill-gap`
+- `/paths/:id/plan`
+- `/u/:slug`
+- `/profile/share`*
+- `/notifications`*
+- `/admin`*, `/admin/courses/new`*, `/admin/courses/:id`*, `/admin/paths/new`*, `/admin/paths/:id`*
+
+Other changes:
+- The profile gains the tabs Reviews, Notes, Plans and Watching.
+- The header gets a bell (logged in only) and a "Skill gap" link in the nav or the Explore menu.
+- The command palette lists the new pages.
